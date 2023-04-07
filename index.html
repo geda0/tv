@@ -176,17 +176,16 @@
 
     </div>
 
-
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.min.js"></script>
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
-            }
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
         }
+      }
     </script>
 
     <script type="module">
@@ -334,20 +333,6 @@
                 this.raindrops = [];
                 this.initKeyboardControls();
                 this.settings = new Settings();
-                this.initGUI();
-            }
-
-            // ... existing code ...
-
-            initGUI() {
-                const gui = new dat.GUI();
-                const folder4D = gui.addFolder('4D Controls');
-                folder4D.add(this.settings, 'raindropSize', 0.01, 40).onChange(() => this.updateRaindropSize());
-                folder4D.add(this.settings, 'raindropSpeed', -100, 100);
-                folder4D.add(this.settings, 'rotationSpeed', -1, 1);
-                folder4D.add(this.settings, 'wPosition', -500, 500);
-                folder4D.add(this.settings, 'wRotation', -Math.PI, Math.PI);
-                // folder4D.open();
             }
 
             initScene() {
@@ -591,23 +576,16 @@
 
         const stickman = createStickman();
         // Update model buttons event listeners
-        model1Button.addEventListener('click', async () => {
+        function selectModel(modelPath) {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Ch03_nonPBR.fbx', animations);
-        });
+            return loadCharacterModel(modelPath);
+        }
 
-        model2Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            await loadCharacterModel('models/Remy.fbx', animations);
-        });
+        model1Button.addEventListener('click', () => selectModel('models/Ch03_nonPBR.fbx'));
+        model2Button.addEventListener('click', () => selectModel('models/Remy.fbx'));
+        model3Button.addEventListener('click', () => selectModel('models/Ch21_nonPBR.fbx'));
 
-        model3Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            await loadCharacterModel('models/Ch21_nonPBR.fbx', animations);
-        });
 
         function animateStickman() {
             stickmanArmAngle += stickmanArmSpeed;
@@ -620,27 +598,271 @@
         }
 
         // Add the animation files to an array
-        const animations = ['run.fbx', 'Cartwheel.fbx', 'Capoeira.fbx'];
-        const animationKeywords = [
-            { keyword: 'run', index: 0 },
-            { keyword: 'walk', index: 0 },
-            { keyword: 'move', index: 0 },
-            { keyword: 'cartwheel', index: 1 },
-            { keyword: 'play', index: 1 },
-            { keyword: 'jump', index: 1 },
-            { keyword: 'capoeira', index: 2 },
-            { keyword: 'stop', index: 2 },
-            { keyword: 'hello', index: 2 },
-            // Add more keywords and their corresponding animation indices here
-        ];
+        const animations = {
+            walk: {
+                names: ["Tpose", "nod", "walk"],
+                steps: [
+
+                    // Nod
+                    { boneName: "head", rotation: { x: -5, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "head", rotation: { x: 0, y: 0, z: 0 }, duration: 300 },
+
+                    // Begin walk cycle
+                    // Left leg forward, right leg back
+                    { boneName: "upperLegLeft", rotation: { x: -10, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "lowerLegLeft", rotation: { x: 20, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "upperLegRight", rotation: { x: 10, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "lowerLegRight", rotation: { x: -20, y: 0, z: 0 }, duration: 300 },
+
+                    // Arms swing opposite to legs
+                    { boneName: "upperArmLeft", rotation: { x: 0, y: 0, z: 10 }, duration: 300 },
+                    { boneName: "upperArmRight", rotation: { x: 0, y: 0, z: -10 }, duration: 300 },
+
+                    // Switch leg positions
+                    { boneName: "upperLegLeft", rotation: { x: 10, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "lowerLegLeft", rotation: { x: -20, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "upperLegRight", rotation: { x: -10, y: 0, z: 0 }, duration: 300 },
+                    { boneName: "lowerLegRight", rotation: { x: 20, y: 0, z: 0 }, duration: 300 },
+
+                    // Arms swing opposite to legs
+                    { boneName: "upperArmLeft", rotation: { x: 0, y: 0, z: -10 }, duration: 300 },
+                    { boneName: "upperArmRight", rotation: { x: 0, y: 0, z: 10 }, duration: 300 },
+
+                ],
+                loop: true
+            }
+
+            ,
+            run: {
+                names: ["run"],
+                steps: [ /* array of run animation steps */],
+            },
+            stand: {
+                names: ["stand", "stop"],
+                steps: [ /* array of stand animation steps */],
+            },
+            jump: {
+                names: ["jump", "play", "up"],
+                steps: [ /* array of jump animation steps */],
+            },
+            sit: {
+                names: ["sit", "down", "sit down", "float", "yoga"],
+                steps: [ /* array of sit animation steps */],
+            },
+        };
+
+        // Helper function to animate a single bone
+        function animateBone(bone, targetRotation, duration) {
+            const currentRotation = bone.rotation.clone();
+            const finalRotation = new THREE.Vector3().copy(currentRotation).add(targetRotation);
+
+            const tween = new TWEEN.Tween(currentRotation)
+                .to(finalRotation, duration)
+                .easing(TWEEN.Easing.Quadratic.Out)
+                .onUpdate(() => {
+                    bone.rotation.set(currentRotation.x, currentRotation.y, currentRotation.z);
+                })
+                .start();
+        }
+
+        const boneTemplate = {
+            head: /Head$/i,
+            neck: /Neck$/i,
+            spine: /Spine$/i,
+            spine1: /Spine1$/i,
+            spine2: /Spine2$/i,
+            hips: /Hips$/i,
+            upperArmLeft: /LeftArm$/i,
+            lowerArmLeft: /LeftForeArm$/i,
+            handLeft: /LeftHand$/i,
+            upperArmRight: /RightArm$/i,
+            lowerArmRight: /RightForeArm$/i,
+            handRight: /RightHand$/i,
+            shoulderLeft: /LeftShoulder$/i,
+            shoulderRight: /RightShoulder$/i,
+            upperLegLeft: /LeftUpLeg$/i,
+            lowerLegLeft: /LeftLeg$/i,
+            footLeft: /LeftFoot$/i,
+            toeBaseLeft: /LeftToeBase$/i,
+            upperLegRight: /RightUpLeg$/i,
+            lowerLegRight: /RightLeg$/i,
+            footRight: /RightFoot$/i,
+            toeBaseRight: /RightToeBase$/i,
+
+            // Additional hand bone parts for left and right hands
+            handThumb1Left: /LeftHandThumb1$/i,
+            handThumb2Left: /LeftHandThumb2$/i,
+            handThumb3Left: /LeftHandThumb3$/i,
+            handIndex1Left: /LeftHandIndex1$/i,
+            handIndex2Left: /LeftHandIndex2$/i,
+            handIndex3Left: /LeftHandIndex3$/i,
+            handMiddle1Left: /LeftHandMiddle1$/i,
+            handMiddle2Left: /LeftHandMiddle2$/i,
+            handMiddle3Left: /LeftHandMiddle3$/i,
+            handRing1Left: /LeftHandRing1$/i,
+            handRing2Left: /LeftHandRing2$/i,
+            handRing3Left: /LeftHandRing3$/i,
+            handPinky1Left: /LeftHandPinky1$/i,
+            handPinky2Left: /LeftHandPinky2$/i,
+            handPinky3Left: /LeftHandPinky3$/i,
+
+            handThumb1Right: /RightHandThumb1$/i,
+            handThumb2Right: /RightHandThumb2$/i,
+            handThumb3Right: /RightHandThumb3$/i,
+            handIndex1Right: /RightHandIndex1$/i,
+            handIndex2Right: /RightHandIndex2$/i,
+            handIndex3Right: /RightHandIndex3$/i,
+            handMiddle1Right: /RightHandMiddle1$/i,
+            handMiddle2Right: /RightHandMiddle2$/i,
+            handMiddle3Right: /RightHandMiddle3$/i,
+            handRing1Right: /RightHandRing1$/i,
+            handRing2Right: /RightHandRing2$/i,
+            handRing3Right: /RightHandRing3$/i,
+            handPinky1Right: /RightHandPinky1$/i,
+            handPinky2Right: /RightHandPinky2$/i,
+            handPinky3Right: /RightHandPinky3$/i,
+            // Additional bones for facial expressions and head movements
+            eyeLeft: /LeftEye$/i,
+            eyeRight: /RightEye$/i,
+            jaw: /Jaw$/i,
+            browOuterUpLeft: /LeftBrowOuterUp$/i,
+            browOuterUpRight: /RightBrowOuterUp$/i,
+            browInnerUpLeft: /LeftBrowInnerUp$/i,
+            browInnerUpRight: /RightBrowInnerUp$/i,
+            cheekSquintLeft: /LeftCheekSquint$/i,
+            cheekSquintRight: /RightCheekSquint$/i,
+            noseSneerLeft: /LeftNoseSneer$/i,
+            noseSneerRight: /RightNoseSneer$/i,
+            lipCornerPullLeft: /LeftLipCornerPull$/i,
+            lipCornerPullRight: /RightLipCornerPull$/i,
+            lipCornerDepressorLeft: /LeftLipCornerDepressor$/i,
+            lipCornerDepressorRight: /RightLipCornerDepressor$/i,
+            lipLowerDownLeft: /LeftLipLowerDown$/i,
+            lipLowerDownRight: /RightLipLowerDown$/i,
+            lipUpperUpLeft: /LeftLipUpperUp$/i,
+            lipUpperUpRight: /RightLipUpperUp$/i,
+            lipPucker: /LipPucker$/i,
+            lipPress: /LipPress$/i,
+
+            // Additional bones for tail and wings if present
+            tailBase: /TailBase$/i,
+            tail1: /Tail1$/i,
+            tail2: /Tail2$/i,
+            tail3: /Tail3$/i,
+            tail4: /Tail4$/i,
+            wingBaseLeft: /LeftWingBase$/i,
+            wing1Left: /LeftWing1$/i,
+            wing2Left: /LeftWing2$/i,
+            wing3Left: /LeftWing3$/i,
+            wing4Left: /LeftWing4$/i,
+            wingBaseRight: /RightWingBase$/i,
+            wing1Right: /RightWing1$/i,
+            wing2Right: /RightWing2$/i,
+            wing3Right: /RightWing3$/i,
+            wing4Right: /RightWing4$/i,
+            // Additional bones for facial expressions and head movements
+            eyeLeft: /LeftEye$/i,
+            eyeRight: /RightEye$/i,
+            jaw: /Jaw$/i,
+            browOuterUpLeft: /LeftBrowOuterUp$/i,
+            browOuterUpRight: /RightBrowOuterUp$/i,
+            browInnerUpLeft: /LeftBrowInnerUp$/i,
+            browInnerUpRight: /RightBrowInnerUp$/i,
+            cheekSquintLeft: /LeftCheekSquint$/i,
+            cheekSquintRight: /RightCheekSquint$/i,
+            noseSneerLeft: /LeftNoseSneer$/i,
+            noseSneerRight: /RightNoseSneer$/i,
+            lipCornerPullLeft: /LeftLipCornerPull$/i,
+            lipCornerPullRight: /RightLipCornerPull$/i,
+            lipCornerDepressorLeft: /LeftLipCornerDepressor$/i,
+            lipCornerDepressorRight: /RightLipCornerDepressor$/i,
+            lipLowerDownLeft: /LeftLipLowerDown$/i,
+            lipLowerDownRight: /RightLipLowerDown$/i,
+            lipUpperUpLeft: /LeftLipUpperUp$/i,
+            lipUpperUpRight: /RightLipUpperUp$/i,
+            lipPucker: /LipPucker$/i,
+            lipPress: /LipPress$/i,
+
+            // Additional bones for tail and wings if present
+            tailBase: /TailBase$/i,
+            tail1: /Tail1$/i,
+            tail2: /Tail2$/i,
+            tail3: /Tail3$/i,
+            tail4: /Tail4$/i,
+            wingBaseLeft: /LeftWingBase$/i,
+            wing1Left: /LeftWing1$/i,
+            wing2Left: /LeftWing2$/i,
+            wing3Left: /LeftWing3$/i,
+            wing4Left: /LeftWing4$/i,
+            wingBaseRight: /RightWingBase$/i,
+            wing1Right: /RightWing1$/i,
+            wing2Right: /RightWing2$/i,
+            wing3Right: /RightWing3$/i,
+            wing4Right: /RightWing4$/i,
+        };
+
+        function findBone(boneName, object3D) {
+            const boneRegex = boneTemplate[boneName];
+            if (!boneRegex) {
+                console.warn(`Bone template not found for: ${boneName}`);
+                return null;
+            }
+            return object3D.children.find((child) => boneRegex.test(child.name));
+        }
+
+        function detectBones(character) {
+            if (!character) return;
+            console.log(character);
+            console.log(character.children);
+
+            const bones = character.children[0].skeleton.bones;
+            const detectedBones = {};
+            console.log("bones: ", bones);
+
+            for (const bone of bones) {
+                for (const key in boneTemplate) {
+                    if (boneTemplate[key].test(bone.name)) {
+                        detectedBones[key] = bone;
+                        break;
+                    }
+                }
+            }
+
+            console.log(detectedBones);
+            return detectedBones;
+        }
+
+        // Function to play an animation
+        async function playAnimation(animationName) {
+            const animation = animations[animationName];
+            if (!animation) {
+                console.warn(`Animation "${animationName}" not found.`);
+                return;
+            }
+
+            for (const animStep of animation.steps) {
+                const { boneName, rotation, duration } = animStep;
+                console.log("CBones: ", characterBones);
+                const bone = characterBones[boneName];
+                if (!bone) {
+                    console.warn(`Bone "${boneName}" not found.`);
+                    continue;
+                } else console.log(`animating${boneName}`);
+
+                animateBone(bone, rotation, duration);
+                await new Promise(resolve => setTimeout(resolve, duration));
+            }
+        }
+
 
         let activeAnimationIndex = 0;
 
-        // ...
+        let characterBones = [];
 
         let actions = [];
 
-        async function loadCharacterModel(modelPath, animationPaths) {
+
+        async function loadCharacterModel(modelPath) {
             return new Promise((resolve, reject) => {
                 loader.load(modelPath, async (object) => {
                     mixer = new THREE.AnimationMixer(object);
@@ -648,75 +870,41 @@
                     character.position.set(0, 0, 0);
                     scene.remove(stickman);
                     scene.add(character);
+                    characterBones = detectBones(character);
 
-                    // Load animations
-                    for (const animationPath of animationPaths) {
-                        await new Promise((resolveAnim, rejectAnim) => {
-                            loader.load('models/' + animationPath, (anim) => {
-                                const action = mixer.clipAction(anim.animations[0]);
-                                action.setLoop(THREE.LoopRepeat);
-                                actions.push(action);
-                                resolveAnim();
-                            }, undefined, rejectAnim);
-                        });
-                    }
-
-                    // Play the first animation
-                    playAnimation(activeAnimationIndex);
                     resolve();
+                    // recognition.start(); // Restart speech recognition after the model is loaded
                 }, undefined, reject);
             });
         }
 
-        function playAnimation(index) {
-            activeAnimationIndex = index;
-            actions.forEach((action, i) => {
-                if (i === index) {
-                    action.reset().play();
-                    updateCircle(i, true);
-                } else {
-                    action.stop();
-                    updateCircle(i, false);
-                }
-            });
-        }
-
-        // ...
-
-        function updateCircle(index, isActive) {
-            const circle = document.getElementById('circle-' + index);
-            if (isActive) {
-                circle.style.borderColor = 'green';
-            } else {
-                circle.style.borderColor = 'transparent';
-            }
-        }
 
         // Create circles for each animation
-        const circleContainer = document.createElement('div');
-        circleContainer.style.position = 'fixed';
-        circleContainer.style.top = '10px';
-        circleContainer.style.left = '10px';
-        document.body.appendChild(circleContainer);
+        // const circleContainer = document.createElement('div');
+        // circleContainer.style.position = 'fixed';
+        // circleContainer.style.top = '10px';
+        // circleContainer.style.left = '10px';
+        // document.body.appendChild(circleContainer);
 
-        animations.forEach((animation, index) => {
-            const circle = document.createElement('div');
-            circle.id = 'circle-' + index;
-            circle.style.width = '20px';
-            circle.style.height = '20px';
-            circle.style.border = '2px solid transparent';
-            circle.style.borderRadius = '50%';
-            circle.style.backgroundColor = 'red';
-            circle.style.marginRight = '5px';
-            circleContainer.appendChild(circle);
+        // animations.forEach((animation, index) => {
+        //     const circle = document.createElement('div');
+        //     circle.id = 'circle-' + index;
+        //     circle.style.width = '20px';
+        //     circle.style.height = '20px';
+        //     circle.style.border = '2px solid transparent';
+        //     circle.style.borderRadius = '50%';
+        //     circle.style.backgroundColor = 'red';
+        //     circle.style.marginRight = '5px';
+        //     circleContainer.appendChild(circle);
 
-            circle.addEventListener('click', () => {
-                playAnimation(index);
-            });
-        });
+        //     circle.addEventListener('click', () => {
+        //         playAnimation(index);
+        //     });
+        // });
 
         const animate = function () {
             requestAnimationFrame(animate);
+            TWEEN.update();
             const delta = clock.getDelta();
             animateStickman();
             if (mixer) {
@@ -736,6 +924,7 @@
 
             controls.update();
             renderer.render(scene, camera);
+            updateCanvas();
         };
 
         // Add the speech recognition initialization code
@@ -745,6 +934,7 @@
             window.msSpeechRecognition)();
         recognition.lang = "en-US";
         recognition.interimResults = true;
+        recognition.lang = 'en-US';
 
         const startButton = document.getElementById("startButton");
         startButton.addEventListener("click", function () {
@@ -769,12 +959,18 @@
             const fontLoader = new FontLoader();
             fontLoader.load("https://threejs.org/examples/fonts/helvetiker_regular.typeface.json", function (font) {
                 // Create a TextGeometry with the font
+
                 words.forEach(word => {
                     // Check if the recognized word matches any of the keywords
-                    const matchedAnimation = animationKeywords.find(anim => anim.keyword === word.toLowerCase());
-                    if (matchedAnimation) {
-                        // Trigger the corresponding animation
-                        playAnimation(matchedAnimation.index);
+                    const animationName = word.toLowerCase();
+
+                    for (const animKey in animations) {
+                        const animation = animations[animKey];
+
+                        if (animation.names.includes(animationName)) {
+                            playAnimation(animKey);
+                            break;
+                        }
                     }
 
                     const textGeometry = new TextGeometry(word, {
@@ -805,27 +1001,32 @@
             return '#' + ((Math.random() * 0xffffff) << 0).toString(16);
         }
 
+
         // Replace the 2D canvas rendering with the 3D scene rendering
         function updateCanvas() {
             let i = 0;
+            const currentTime = Date.now(); // Use Date.now() instead of clock.getElapsedTime() * 1000
+
             while (i < canvasWords.length) {
                 const word = canvasWords[i];
-                if (Date.now() - word.time >= 6000) {
+                if (currentTime - word.time >= 6000) {
                     scene.remove(word.mesh);
                     canvasWords.splice(i, 1);
                 } else {
                     i++;
                 }
             }
+
             requestAnimationFrame(updateCanvas);
         }
+
 
 
         const questionMarkButton = document.getElementById('questionMarkButton');
         const infoBox = document.getElementById('infoBox');
         const closeButton = document.getElementById('closeButton');
         const okbutton = document.getElementById('close-info-box')
-        
+
         questionMarkButton.addEventListener('click', () => {
             infoBox.style.display = 'block';
         });
@@ -837,8 +1038,6 @@
             infoBox.style.display = 'none';
         });
 
-
-
         updateCanvas();
 
         animate();
@@ -847,7 +1046,7 @@
 </body>
 <footer>
     <p>© 2023 ME. All rights reserved.</p>
-    <p><a href="https://www.linkedin.com/in/marwan-elgendy/">LinkedIn</a> | <a
+    <p><a href="https://www.linkedin.com$/in/marwan-elgendy/">LinkedIn</a> | <a
             href="mailto:marwan.gendy@gmail.com">marwan.gendy@gmail.com</a></p>
 </footer>
 
