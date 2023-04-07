@@ -652,26 +652,13 @@
         });
 
         function animateStickman() {
-            const armTween = new TWEEN.Tween({ angle: stickmanArmAngle })
-                .to({ angle: stickmanArmAngle + Math.PI }, 1000)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(function () {
-                    stickmanArmAngle = this.angle;
-                    stickman.children[4].rotation.x = Math.sin(stickmanArmAngle) * 0.5; // Left arm
-                    stickman.children[5].rotation.x = -Math.sin(stickmanArmAngle) * 0.5; // Right arm
-                });
+            stickmanArmAngle += stickmanArmSpeed;
+            stickmanLegAngle += stickmanLegSpeed;
+            stickman.children[4].rotation.x = Math.sin(stickmanArmAngle) * 0.5; // Left arm
+            stickman.children[5].rotation.x = -Math.sin(stickmanArmAngle) * 0.5; // Right arm
 
-            const legTween = new TWEEN.Tween({ angle: stickmanLegAngle })
-                .to({ angle: stickmanLegAngle + Math.PI }, 1000)
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(function () {
-                    stickmanLegAngle = this.angle;
-                    stickman.children[2].rotation.z = Math.sin(stickmanLegAngle) * 0.5; // Left leg
-                    stickman.children[3].rotation.z = -Math.sin(stickmanLegAngle) * 0.5; // Right leg
-                });
-
-            armTween.start();
-            legTween.start();
+            stickman.children[2].rotation.z = Math.sin(stickmanLegAngle) * 0.5; // Left leg
+            stickman.children[3].rotation.z = -Math.sin(stickmanLegAngle) * 0.5; // Right leg
         }
 
 
@@ -715,15 +702,11 @@
                                 const action = mixer.clipAction(anim.animations[0]);
                                 action.setLoop(THREE.LoopRepeat);
                                 actions.push(action);
-                                console.log("Loaded Animation:", animationPath); // Log the loaded animation path
-                                console.log("Current Actions array:", actions); // Log the current actions array
                                 resolveAnim();
                             }, undefined, rejectAnim);
                         });
                     }
-                    console.log("Actions array: ", actions); // Log the actions array
 
-                    console.log("Active animation index:", activeAnimationIndex); // Log the activeAnimationIndex
                     playAnimation(activeAnimationIndex);
 
                     resolve();
@@ -785,7 +768,7 @@
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
             animateStickman();
-            TWEEN.update();
+            // TWEEN.update();
             if (mixer) {
                 mixer.update(delta);
             }
