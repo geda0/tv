@@ -176,7 +176,8 @@
             Generative Video Platform ©, Is a platform for creators.
             Based on Thought Visualizer Technology ©. the representation of throught in 4D.
             <br />
-            While the platform is under construction still, The deployed character will "run" "Play" "Stop" if you ask (after deploying, be patient with them :).
+            While the platform is under construction still, The deployed character will "run" "Play" "Stop" if you ask
+            (after deploying, be patient with them :).
         </p>
         <span class="closeer-button" id="closeButton">&times;</span>
         <button id="close-info-box">OK</button>
@@ -567,6 +568,9 @@
         document.body.appendChild(renderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.minDistance = 110; 
+        controls.maxDistance = 1200; 
+
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(0, 10, 10);
