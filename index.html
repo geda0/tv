@@ -158,8 +158,9 @@
     <div id="model-selection">
         <h4>Deploy</h4>
         <button id="model-1" class="model-button">Glasses</button>
-        <button id="model-2" class="model-button">OK</button>
+        <button id="model-2" class="model-button">Aj</button>
         <button id="model-3" class="model-button">Remy</button>
+        <button id="model-4" class="model-button">pmm</button>
     </div>
     <button id="startButton">Start talking!</button>
 
@@ -174,10 +175,17 @@
         <h3>Generative Video Platform -under construction-</h3>
         <p>
             Generative Video Platform ©, Is a platform for creators.
-            Based on Thought Visualizer Technology ©. the representation of throught in 4D.
+            Based on Thought Visualizer Technology ©.
             <br />
             While the platform is under construction still, The deployed character will "run" "Play" "Stop" if you ask
-            (after deploying, be patient with them :).
+            <br />
+            1. Deploy a character
+            <br />
+            2. Strt Talking
+            <br />
+            2.1.be patient with them :)
+            <br />
+            
         </p>
         <span class="closeer-button" id="closeButton">&times;</span>
         <button id="close-info-box">OK</button>
@@ -204,6 +212,27 @@
         import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
         import { FontLoader } from 'three/addons/loaders/FontLoader.js';
         import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+        let loadedFont = null;
+
+        function loadFont() {
+            return new Promise((resolve, reject) => {
+                if (loadedFont) {
+                    console.log("loaded ya m3alem")
+                    resolve(loadedFont);
+                    return;
+                }
+
+                const fontLoader = new FontLoader();
+                fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', font => {
+                    loadedFont = font;
+                    resolve(loadedFont);
+                }, undefined, error => {
+                    reject(error);
+                });
+            });
+        }
+
 
         class Settings {
             constructor() {
@@ -568,8 +597,8 @@
         document.body.appendChild(renderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
-        controls.minDistance = 110; 
-        controls.maxDistance = 1200; 
+        controls.minDistance = 110;
+        controls.maxDistance = 1200;
 
 
         const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -640,6 +669,7 @@
         const model1Button = document.getElementById('model-1');
         const model2Button = document.getElementById('model-2');
         const model3Button = document.getElementById('model-3');
+        const model4Button = document.getElementById('model-4');
         const modelSelection = document.getElementById('model-selection');
 
         const stickman = createStickman();
@@ -653,13 +683,20 @@
         model2Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Remy.fbx', animations);
+            await loadCharacterModel('models/Aj.fbx', animations);
         });
 
         model3Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Ch21_nonPBR.fbx', animations);
+            await loadCharacterModel('models/Remy.fbx', animations);
+        });
+
+        
+        model4Button.addEventListener('click', async () => {
+            modelSelection.style.display = 'none';
+            scene.add(stickman);
+            await loadCharacterModel('models/passive_marker_man.fbx', animations);
         });
 
         function animateStickman() {
