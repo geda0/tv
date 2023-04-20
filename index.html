@@ -67,12 +67,21 @@
             z-index: 999;
         }
 
-        #startButton {
+        #startButton,
+        #recordButton,
+        #stopRecordingButton {
             width: 100px;
             height: 50px;
             position: absolute;
             top: 0;
             left: calc(50% - 50px);
+            z-index: 100;
+        }
+
+        #tracksContainer {
+            position: absolute;
+            bottom: 90px;
+            right: 10px;
             z-index: 100;
         }
 
@@ -163,7 +172,11 @@
         <button id="model-3" class="model-button">Remy</button>
         <button id="model-4" class="model-button">pmm</button>
     </div>
-    <button id="startButton">Start talking!</button>
+    <button id="startButton">Start!</button>
+    <button id="recordButton" style="display:none;">Record</button>
+    <button id="stopRecordingButton" style="display:none;">Stop Recording</button>
+    <div id="tracksContainer"></div>
+
 
     <div id="hud">
         <input type="color" id="bgColorPicker" class="color-picker" value="#119911">
@@ -178,16 +191,17 @@
             Generative Video Platform ©, Is a platform for creators.
             Based on Thought Visualizer Technology ©.
             <br />
-            While the platform is under construction still, The deployed characters will "run" "jump" "dance" or "stop" if you ask them to.
+            While the platform is under construction still, The deployed characters will "run" "jump" "dance" or "stop"
+            if you ask them to.
             <br />
-            1. Deploy a character
+            1. Click Start!
             <br />
-            2. Strt Talking
+            2. Deploy a character
             <br />
-            2.1.be patient as it loads :)
+            3. Click Record to make tracks (optional)
             <br />
             Note: Speech recognition is 100% on your device.
-            
+
         </p>
         <span class="closeer-button" id="closeButton">&times;</span>
         <button id="close-info-box">OK</button>
@@ -694,7 +708,7 @@
             await loadCharacterModel('models/Remy.fbx', animations);
         });
 
-        
+
         model4Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
@@ -804,8 +818,8 @@
         animations.forEach((animation, index) => {
             const circle = document.createElement('div');
             circle.id = 'circle-' + index;
-            circle.style.width = '20px';
-            circle.style.height = '20px';
+            circle.style.width = '10px';
+            circle.style.height = '10px';
             circle.style.border = '2px solid transparent';
             circle.style.borderRadius = '50%';
             circle.style.backgroundColor = 'red';
@@ -847,16 +861,80 @@
             window.msSpeechRecognition)();
         recognition.lang = "en-US";
         recognition.interimResults = true;
+        // Remove the existing startButton event listener and add the following code:
 
         const startButton = document.getElementById("startButton");
         startButton.addEventListener("click", function () {
-            startButton.style.display = 'none';
+            startButton.style.display = "none";
             recognition.start();
-            recognition.onresult = function (event) {
-                const transcript = event.results[0][0].transcript;
-                drawScene(transcript);
-            };
+            recordButton.style.display = "inline";
         });
+        const recordButton = document.getElementById("recordButton");
+        const stopRecordingButton = document.getElementById("stopRecordingButton");
+        const tracksContainer = document.getElementById("tracksContainer");
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        recordButton.addEventListener("click", function () {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+
+                audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+
+                recordButton.style.display = "none";
+                stopRecordingButton.style.display = "inline";
+            });
+        });
+
+        let trackid = 0;
+
+        function createTrack(audioUrl) {
+            const audio = new Audio(audioUrl);
+            audio.loop = true;
+            trackid++;
+
+            const trackDiv = document.createElement("div");
+            trackDiv.classList.add("records");
+            const loopStopButton = document.createElement("button");
+            loopStopButton.textContent = `Stop/Track ${trackid}`;
+            loopStopButton.addEventListener("click", () => {
+                if (audio.paused) {
+                    audio.play();
+                    loopStopButton.textContent = `Stop/Track ${trackid}`;
+                } else {
+                    audio.pause();
+                    loopStopButton.textContent = `Start/Track ${trackid}`;
+                }
+            });
+
+            trackDiv.appendChild(loopStopButton);
+            tracksContainer.appendChild(trackDiv);
+
+            audio.play();
+        }
+
+        stopRecordingButton.addEventListener("click", function () {
+            mediaRecorder.stop();
+            mediaRecorder.addEventListener("stop", () => {
+                const audioBlob = new Blob(audioChunks);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                createTrack(audioUrl);
+                recordButton.style.display = "inline";
+                stopRecordingButton.style.display = "none";
+            });
+        });
+
+        // Keep the existing speech recognition and draw functionality
+
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            drawScene(transcript);
+        };
 
         recognition.onend = function () {
             recognition.start();
