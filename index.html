@@ -242,7 +242,6 @@
         function loadFont() {
             return new Promise((resolve, reject) => {
                 if (loadedFont) {
-                    console.log("loaded ya m3alem")
                     resolve(loadedFont);
                     return;
                 }
@@ -617,7 +616,7 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(99, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 100, 250);
+        camera.position.set(0, 200, 500);
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -909,7 +908,7 @@
 
         let trackid = 0;
 
-        function createTrack(audioUrl) {
+        function createTrack(audioUrl, words) {
             const audio = new Audio(audioUrl);
             audio.loop = true;
             trackid++;
@@ -930,7 +929,12 @@
 
             trackDiv.appendChild(loopStopButton);
             tracksContainer.appendChild(trackDiv);
-
+            audio.addEventListener("play", () => {
+                drawWords(words);
+            });
+            audio.addEventListener("pause", () => {
+                clearWords();
+            });
             audio.play();
         }
 
@@ -939,18 +943,33 @@
             mediaRecorder.addEventListener("stop", () => {
                 const audioBlob = new Blob(audioChunks);
                 const audioUrl = URL.createObjectURL(audioBlob);
-                createTrack(audioUrl);
+                createTrack(audioUrl, recognizedWords);
+                recognizedWords = []; // Reset the recognized words array
                 recordButton.style.display = "inline";
                 stopRecordingButton.style.display = "none";
             });
         });
 
-        // Keep the existing speech recognition and draw functionality
+
+        let startTime;
+
+        recognition.onstart = function () {
+            startTime = Date.now();
+        };
 
         recognition.onresult = function (event) {
             const transcript = event.results[0][0].transcript;
-            drawScene(transcript);
+            const words = transcript.split(" ");
+            const currentTime = Date.now();
+            words.forEach((word) => {
+                recognizedWords.push({
+                    word: word,
+                    time: currentTime - startTime,
+                });
+            });
+            drawScene(words);
         };
+
 
         recognition.onend = function () {
             recognition.start();
@@ -958,9 +977,48 @@
 
         // Modify the drawScene function
         let canvasWords = [];
+        let recognizedWords = [];
 
-        function drawScene(transcript) {
-            const words = transcript.split(" ");
+        function clearWords() {
+            canvasWords.forEach((word) => {
+                scene.remove(word.mesh);
+            });
+            canvasWords = [];
+        }
+
+
+        function drawWords(words) {
+            let wordIndex = 0;
+            const drawNextWord = () => {
+                if (wordIndex < words.length) {
+                    loadFont().then((font) => {
+                        const word = words[wordIndex].word;
+                        const textGeometry = new TextGeometry(word, {
+                            font: font,
+                            size: 10,
+                            height: 1,
+                        });
+                        const textMaterial = new THREE.MeshBasicMaterial({ color: randomColor() });
+                        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                        textMesh.position.set(
+                            Math.random() * 400 - 200,
+                            Math.random() * 200,
+                            Math.random() * 500 - 200
+                        );
+                        scene.add(textMesh);
+                        canvasWords.push({
+                            mesh: textMesh,
+                            time: Date.now(),
+                        });
+                    });
+                    setTimeout(drawNextWord, words[wordIndex].time);
+                    wordIndex++;
+                }
+            };
+            drawNextWord();
+        }
+
+        function drawScene(words) {
             // Load the Helvetiker font
             const fontLoader = new FontLoader();
             fontLoader.load("https://threejs.org/examples/fonts/helvetiker_regular.typeface.json", function (font) {
