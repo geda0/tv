@@ -67,15 +67,23 @@
             z-index: 999;
         }
 
+        #startButton {
+            height: 50px;
+        }
+
         #startButton,
         #recordButton,
         #stopRecordingButton {
             width: 100px;
-            height: 50px;
             position: absolute;
             top: 0;
             left: calc(50% - 50px);
             z-index: 100;
+        }
+
+        #recordButton,
+        #stopRecordingButton {
+            height: 34px;
         }
 
         #tracksContainer {
@@ -398,7 +406,10 @@
 
                 for (let i = 0; i < settings.rainCount; i++) {
                     const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
-                    raindrop.position.set(Math.random() * 400 - 200, Math.random() * settings.rainHeight, Math.random() * 500 - 200);
+                    raindrop.position.set(Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
+                        Math.random() * settings.rainHeight,
+                        Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2);
+
                     scene.add(raindrop);
                     rain.push(raindrop);
                 }
@@ -638,7 +649,10 @@
             rainColor: '#00f0ff',
             rainCount: 7001,
             rainHeight: 500,
-            rainSpeed: 0.2
+            rainSpeed: 0.2,
+
+            rainAreaWidth: 1000, // Add this line
+            rainAreaDepth: 1000  // Add this line
         };
 
         const bgColorPicker = document.getElementById('bgColorPicker');
@@ -846,6 +860,8 @@
                 raindrop.position.y -= settings.rainSpeed;
                 if (raindrop.position.y < 0) {
                     raindrop.position.y = Math.random() * settings.rainHeight;
+                    raindrop.position.x = Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2;
+                    raindrop.position.z = Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2;
                 }
             }
 
