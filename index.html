@@ -568,6 +568,8 @@
         } from 'gvp';
         import { synthesizeToAudioBuffer, loadTtsModel } from 'tts-wasm';
 
+        const GVP_EXPORT_FPS = 30;
+
         let loadedFont = null;
 
         function loadFont() {
@@ -589,21 +591,38 @@
 
         const clock = new THREE.Clock();
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(99, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 200, 500);
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 165, 520);
 
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
+        if ('outputEncoding' in renderer) {
+            renderer.outputEncoding = THREE.sRGBEncoding;
+        }
         document.body.appendChild(renderer.domElement);
 
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 90, -80);
+        controls.update();
         controls.minDistance = 110;
         controls.maxDistance = 1200;
+        controls.maxPolarAngle = Math.PI * 0.48;
 
+        scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+        scene.add(new THREE.HemisphereLight(0xb8c5ff, 0x2a2a28, 0.4));
 
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(0, 10, 10);
-        scene.add(light);
+        const keyLight = new THREE.DirectionalLight(0xffffff, 0.85);
+        keyLight.position.set(150, 220, 180);
+        keyLight.target.position.set(0, 80, -40);
+        scene.add(keyLight);
+        scene.add(keyLight.target);
+
+        const fillLight = new THREE.DirectionalLight(0xc8dcff, 0.35);
+        fillLight.position.set(-200, 120, 100);
+        fillLight.target.position.set(0, 70, -20);
+        scene.add(fillLight);
+        scene.add(fillLight.target);
 
         const loader = new FBXLoader();
         let mixer;
@@ -615,16 +634,20 @@
         const stickmanArmAmplitude = 0.5;
         const stickmanLegAmplitude = 0.5;
 
-        let rain = [];
+        let rainInstancedMesh = null;
+        let rainPx = null;
+        let rainPy = null;
+        let rainPz = null;
+        const rainDummy = new THREE.Object3D();
         const settings = {
             clearColor: '#119911',
             rainColor: '#00f0ff',
-            rainCount: 7001,
+            rainCount: 2000,
             rainHeight: 500,
             rainSpeed: 0.2,
 
-            rainAreaWidth: 1000, // Add this line
-            rainAreaDepth: 1000  // Add this line
+            rainAreaWidth: 1000,
+            rainAreaDepth: 1000,
         };
 
         /** Levels for Web Audio (Export folder in dat.GUI). micMonitor 0 = no live mic to speakers (reduces echo). */
@@ -646,58 +669,58 @@
         });
         renderer.setClearColor(settings.clearColor);
 
-        function initRain() {
+        function disposeRainInstanced() {
+            if (rainInstancedMesh) {
+                scene.remove(rainInstancedMesh);
+                rainInstancedMesh.geometry.dispose();
+                rainInstancedMesh.material.dispose();
+                rainInstancedMesh = null;
+            }
+            rainPx = rainPy = rainPz = null;
+        }
+
+        function rebuildRainInstanced(count) {
+            disposeRainInstanced();
+            if (count <= 0) {
+                return;
+            }
             const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
             const rainMaterial = new THREE.MeshBasicMaterial({
                 color: settings.rainColor,
                 transparent: true,
                 opacity: 0.5,
             });
-            for (let i = 0; i < settings.rainCount; i++) {
-                const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
-                raindrop.position.set(
-                    Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
-                    Math.random() * settings.rainHeight,
-                    Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2
-                );
-                scene.add(raindrop);
-                rain.push(raindrop);
+            rainInstancedMesh = new THREE.InstancedMesh(rainGeo, rainMaterial, count);
+            rainPx = new Float32Array(count);
+            rainPy = new Float32Array(count);
+            rainPz = new Float32Array(count);
+            const aw = settings.rainAreaWidth;
+            const ad = settings.rainAreaDepth;
+            const rh = settings.rainHeight;
+            for (let i = 0; i < count; i++) {
+                rainPx[i] = Math.random() * aw - aw / 2;
+                rainPy[i] = Math.random() * rh;
+                rainPz[i] = Math.random() * ad - ad / 2;
+                rainDummy.position.set(rainPx[i], rainPy[i], rainPz[i]);
+                rainDummy.updateMatrix();
+                rainInstancedMesh.setMatrixAt(i, rainDummy.matrix);
             }
+            rainInstancedMesh.instanceMatrix.needsUpdate = true;
+            scene.add(rainInstancedMesh);
+        }
+
+        function initRain() {
+            rebuildRainInstanced(Math.floor(settings.rainCount));
         }
 
         function updateRainColorDisplay() {
-            const rainColor = new THREE.Color(settings.rainColor);
-            for (let i = 0; i < rain.length; i++) {
-                rain[i].material.color.set(rainColor);
+            if (rainInstancedMesh) {
+                rainInstancedMesh.material.color.set(settings.rainColor);
             }
         }
 
         function updateRainCountDisplay() {
-            const currentCount = rain.length;
-            const newCount = Math.floor(settings.rainCount);
-            const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
-            const rainMaterial = new THREE.MeshBasicMaterial({
-                color: settings.rainColor,
-                transparent: true,
-                opacity: 0.5,
-            });
-            if (newCount > currentCount) {
-                for (let i = currentCount; i < newCount; i++) {
-                    const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
-                    raindrop.position.set(
-                        Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
-                        Math.random() * settings.rainHeight,
-                        Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2
-                    );
-                    scene.add(raindrop);
-                    rain.push(raindrop);
-                }
-            } else {
-                for (let i = currentCount - 1; i >= newCount; i--) {
-                    scene.remove(rain[i]);
-                    rain.pop();
-                }
-            }
+            rebuildRainInstanced(Math.floor(settings.rainCount));
         }
 
         function initRainGui() {
@@ -724,6 +747,8 @@
         let exportController = null;
         const commentaryCues = [];
         let selectedCharacterId = null;
+        let canvasWords = [];
+        let recognizedWords = [];
 
         function layoutVideoPlane() {
             if (!videoPlane || !embedVideo.videoWidth) return;
@@ -783,6 +808,8 @@
                 videoTexture = null;
             }
             videoTexture = new THREE.VideoTexture(embedVideo);
+            videoTexture.minFilter = THREE.LinearFilter;
+            videoTexture.magFilter = THREE.LinearFilter;
             if ('encoding' in videoTexture) {
                 videoTexture.encoding = THREE.sRGBEncoding;
             }
@@ -799,7 +826,10 @@
 
         embedVideo.addEventListener('loadeddata', buildVideoPlaneFromEmbed);
         embedVideo.addEventListener('loadedmetadata', () => {
-            syncStudioTimelineUi();
+            syncStudioTimelineUi(true);
+        });
+        embedVideo.addEventListener('timeupdate', () => {
+            syncStudioTimelineUi(true);
         });
 
         embedVideo.addEventListener('play', () => {
@@ -1029,7 +1059,7 @@
             requestAnimationFrame(animate);
             const delta = getMixerDelta();
             animateStickman();
-            if (videoTexture) {
+            if (videoTexture && !embedVideo.paused && !embedVideo.ended) {
                 videoTexture.needsUpdate = true;
             }
             updateCharacter(delta);
@@ -1040,19 +1070,40 @@
                 }
             }
 
-            for (let i = 0; i < rain.length; i++) {
-                const raindrop = rain[i];
-                raindrop.position.y -= settings.rainSpeed * (simPaused ? 0 : 1);
-                if (raindrop.position.y < 0) {
-                    raindrop.position.y = Math.random() * settings.rainHeight;
-                    raindrop.position.x = Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2;
-                    raindrop.position.z = Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2;
+            if (rainInstancedMesh && rainPx && rainPy && rainPz) {
+                const n = rainPx.length;
+                const speed = settings.rainSpeed * (simPaused ? 0 : 1);
+                const aw = settings.rainAreaWidth;
+                const ad = settings.rainAreaDepth;
+                const rh = settings.rainHeight;
+                for (let i = 0; i < n; i++) {
+                    rainPy[i] -= speed;
+                    if (rainPy[i] < 0) {
+                        rainPy[i] = Math.random() * rh;
+                        rainPx[i] = Math.random() * aw - aw / 2;
+                        rainPz[i] = Math.random() * ad - ad / 2;
+                    }
+                    rainDummy.position.set(rainPx[i], rainPy[i], rainPz[i]);
+                    rainDummy.updateMatrix();
+                    rainInstancedMesh.setMatrixAt(i, rainDummy.matrix);
+                }
+                rainInstancedMesh.instanceMatrix.needsUpdate = true;
+            }
+
+            let wi = 0;
+            while (wi < canvasWords.length) {
+                const word = canvasWords[wi];
+                if (Date.now() - word.time >= 6000) {
+                    scene.remove(word.mesh);
+                    canvasWords.splice(wi, 1);
+                } else {
+                    wi++;
                 }
             }
 
             controls.update();
             renderer.render(scene, camera);
-            syncStudioTimelineUi();
+            syncStudioTimelineUi(false);
         };
 
         function getTimelineNow() {
@@ -1065,6 +1116,7 @@
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
             layoutVideoPlane();
         });
@@ -1078,6 +1130,8 @@
         const studioDurationEl = document.getElementById('studioDuration');
 
         let timelineScrubbing = false;
+        let lastStudioUiSyncMs = 0;
+        const STUDIO_UI_SYNC_MS = 125;
         let activeTtsSources = [];
         /** Fallback length (seconds) when no embedded video. */
         let sessionTimelineLengthSec = 120;
@@ -1117,7 +1171,12 @@
             return Math.max(sessionTimelineLengthSec, maxCue, timelineTime + 1, 30);
         }
 
-        function syncStudioTimelineUi() {
+        function syncStudioTimelineUi(force) {
+            const now = Date.now();
+            if (!force && !timelineScrubbing && now - lastStudioUiSyncMs < STUDIO_UI_SYNC_MS) {
+                return;
+            }
+            lastStudioUiSyncMs = now;
             const dur = getTimelineDurationSec();
             const cur = getTimelineNow();
             studioDurationEl.textContent = formatTime(dur);
@@ -1161,7 +1220,7 @@
             } else {
                 timelineTime = t;
             }
-            syncStudioTimelineUi();
+            syncStudioTimelineUi(true);
         }
 
         studioScrubber.addEventListener('pointerdown', () => {
@@ -1169,7 +1228,7 @@
         });
         studioScrubber.addEventListener('pointerup', () => {
             timelineScrubbing = false;
-            syncStudioTimelineUi();
+            syncStudioTimelineUi(true);
         });
         studioScrubber.addEventListener('input', () => {
             seekTimelineTo(parseFloat(studioScrubber.value, 10));
@@ -1336,7 +1395,7 @@
                     activeTtsSources.push(src);
                 }
                 exportController = startCanvasExport(renderer.domElement, audioGraph.destination.stream, {
-                    fps: 30,
+                    fps: GVP_EXPORT_FPS,
                     videoBitsPerSecond: 2_500_000,
                 });
                 setExportRecordingUi(true);
@@ -1438,7 +1497,7 @@
         document.getElementById('studioClearVideo').addEventListener('click', () => {
             clearEmbeddedVideo();
             timelineTime = 0;
-            syncStudioTimelineUi();
+            syncStudioTimelineUi(true);
         });
         document.getElementById('studioInitAudio').addEventListener('click', () => {
             doInitAudio();
@@ -1861,10 +1920,6 @@
             recognition.start();
         };
 
-        // Modify the drawScene function
-        let canvasWords = [];
-        let recognizedWords = [];
-
         function clearWords() {
             canvasWords.forEach((word) => {
                 scene.remove(word.mesh);
@@ -1945,22 +2000,6 @@
             return '#' + ((Math.random() * 0xffffff) << 0).toString(16);
         }
 
-        // Replace the 2D canvas rendering with the 3D scene rendering
-        function updateCanvas() {
-            let i = 0;
-            while (i < canvasWords.length) {
-                const word = canvasWords[i];
-                if (Date.now() - word.time >= 6000) {
-                    scene.remove(word.mesh);
-                    canvasWords.splice(i, 1);
-                } else {
-                    i++;
-                }
-            }
-            requestAnimationFrame(updateCanvas);
-        }
-
-
         const questionMarkButton = document.getElementById('questionMarkButton');
         const infoBox = document.getElementById('infoBox');
         const closeButton = document.getElementById('closeButton');
@@ -1978,8 +2017,6 @@
         });
 
 
-
-        updateCanvas();
 
         animate();
     </script>
