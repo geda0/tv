@@ -24,19 +24,33 @@ export function pickVideoMimeType() {
  * @param {MediaStream | null} micStream
  */
 export function createAudioGraph(videoEl, micStream) {
+    /** Route playback only through Web Audio — avoids double output from the element. */
+    videoEl.muted = true;
+    videoEl.setAttribute('playsinline', '');
+
     const ctx = new AudioContext();
-    const gainVideo = ctx.createGain();
-    const gainMic = ctx.createGain();
     const dest = ctx.createMediaStreamDestination();
 
-    gainVideo.gain.value = 0.7;
-    gainMic.gain.value = 1;
+    const gainVideo = ctx.createGain();
+    const gainVideoMonitor = ctx.createGain();
+    const gainMic = ctx.createGain();
+    const gainMicMonitor = ctx.createGain();
 
-    let micSource = null;
+    gainVideo.gain.value = 0.7;
+    gainVideoMonitor.gain.value = 1;
+    gainMic.gain.value = 1;
+    /** 0 = no mic to speakers (avoids acoustic feedback / echo with speakers). */
+    gainMicMonitor.gain.value = 0;
 
     /** One MediaElementAudioSourceNode per HTMLMediaElement (browser rule). */
     const videoSource = ctx.createMediaElementSource(videoEl);
     videoSource.connect(gainVideo);
+
+    gainVideo.connect(dest);
+    gainVideo.connect(gainVideoMonitor);
+    gainVideoMonitor.connect(ctx.destination);
+
+    let micSource = null;
 
     function setMicStream(stream) {
         if (micSource) {
@@ -48,20 +62,20 @@ export function createAudioGraph(videoEl, micStream) {
         if (stream && stream.getAudioTracks().length) {
             micSource = ctx.createMediaStreamSource(stream);
             micSource.connect(gainMic);
+            gainMic.connect(dest);
+            gainMic.connect(gainMicMonitor);
+            gainMicMonitor.connect(ctx.destination);
         }
     }
 
     setMicStream(micStream);
 
-    gainVideo.connect(dest);
-    gainMic.connect(dest);
-    gainVideo.connect(ctx.destination);
-    gainMic.connect(ctx.destination);
-
     return {
         context: ctx,
         gainVideo,
+        gainVideoMonitor,
         gainMic,
+        gainMicMonitor,
         destination: dest,
         /** @param {MediaStream} stream */
         setMicStream,

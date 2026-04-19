@@ -166,79 +166,112 @@
             background-color: #4b0075;
         }
 
-        #gvp-panel {
+        /* Match dat.GUI look (dg.main) for auxiliary script/project panel */
+        .dg-style-panel {
             position: fixed;
-            top: 48px;
-            right: 8px;
-            width: min(340px, 94vw);
-            max-height: calc(100vh - 120px);
+            left: 10px;
+            bottom: 56px;
+            width: 245px;
+            max-height: min(42vh, 380px);
+            overflow-x: hidden;
             overflow-y: auto;
-            background: rgba(20, 20, 24, 0.92);
-            color: #eee;
-            font-family: system-ui, sans-serif;
-            font-size: 13px;
-            padding: 10px 12px;
-            border-radius: 8px;
+            background: #1a1a1a;
+            color: #e8e8e8;
+            font: 11px 'Lucida Grande', Helvetica, Verdana, sans-serif;
+            text-shadow: 0 -1px 0 #111;
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+            border-left: 1px solid #2c2c2c;
+            border-top: 1px solid #2c2c2c;
+            padding: 8px 10px 10px;
             z-index: 200;
             box-sizing: border-box;
         }
 
-        #gvp-panel h4 {
-            margin: 8px 0 6px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #c9b8e8;
+        .dg-style-panel h4 {
+            margin: 6px 0 4px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            text-transform: capitalize;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 4px;
         }
 
-        #gvp-panel label {
+        .dg-style-panel label {
             display: block;
             margin-top: 6px;
+            color: #aaa;
         }
 
-        #gvp-panel input[type="range"] {
+        .dg-style-panel input[type="range"] {
             width: 100%;
         }
 
-        #gvp-panel button,
-        #gvp-panel select,
-        #gvp-panel textarea {
+        .dg-style-panel button,
+        .dg-style-panel select,
+        .dg-style-panel textarea {
             width: 100%;
             box-sizing: border-box;
             margin-top: 4px;
+            font: 11px 'Lucida Grande', Helvetica, Verdana, sans-serif;
         }
 
-        #gvp-panel textarea {
-            min-height: 56px;
+        .dg-style-panel textarea {
+            min-height: 52px;
             resize: vertical;
+            background: #303030;
+            color: #e8e8e8;
+            border: 1px solid #444;
         }
 
-        #gvp-panel .row {
+        .dg-style-panel .row {
             display: flex;
-            gap: 6px;
+            gap: 4px;
             align-items: center;
             margin-top: 6px;
         }
 
-        #gvp-panel .row button {
+        .dg-style-panel .row button {
             flex: 1;
             margin-top: 0;
+            background: #303030;
+            color: #e8e8e8;
+            border: 1px solid #555;
+            padding: 4px 6px;
+            cursor: pointer;
         }
 
-        #gvp-panel .hint {
-            font-size: 11px;
-            color: #aaa;
+        .dg-style-panel .row button:hover {
+            background: #3a3a3a;
+        }
+
+        .dg-style-panel .hint {
+            font-size: 10px;
+            color: #888;
             margin-top: 4px;
             line-height: 1.35;
         }
 
-        #gvp-panel #cueList {
-            max-height: 120px;
+        .dg-style-panel #cueList {
+            max-height: 100px;
             overflow-y: auto;
-            background: rgba(0, 0, 0, 0.25);
+            background: #111;
             padding: 6px;
-            border-radius: 4px;
+            border: 1px solid #333;
             margin-top: 4px;
-            font-size: 12px;
+            font-size: 10px;
+            color: #ccc;
+        }
+
+        #exportDownload {
+            display: none;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #6ad;
+        }
+
+        #exportDownload.is-ready {
+            display: block;
         }
 
         #embedVideo {
@@ -269,31 +302,11 @@
     <div id="tracksContainer"></div>
 
     <video id="embedVideo" playsinline crossorigin="anonymous"></video>
+    <input type="file" id="videoFileInput" accept="video/*" style="display:none" />
 
-    <div id="gvp-panel">
-        <h4>Export &amp; video</h4>
-        <label>Embedded video (optional)</label>
-        <input type="file" id="videoFileInput" accept="video/*" />
-        <div class="row">
-            <button type="button" id="btnClearVideo">Clear video</button>
-            <button type="button" id="btnToggleVideoPlane">Toggle plane</button>
-        </div>
-        <div class="row">
-            <button type="button" id="btnPlayPause">Pause</button>
-            <button type="button" id="btnAudioInit">Init audio</button>
-        </div>
-        <label>Video gain <span id="lblVideoGain">0.7</span></label>
-        <input type="range" id="rngVideoGain" min="0" max="1" step="0.01" value="0.7" />
-        <label>Mic gain <span id="lblMicGain">1</span></label>
-        <input type="range" id="rngMicGain" min="0" max="2" step="0.01" value="1" />
-        <div class="row">
-            <button type="button" id="btnExportStart">Start export</button>
-            <button type="button" id="btnExportStop" disabled>Stop export</button>
-        </div>
-        <a id="exportDownload" href="#" download="gvp-export.webm" style="display:none;">Download last export</a>
-
-        <h4>TTS preview (Web Speech)</h4>
-        <p class="hint">Browser TTS cannot be mixed into WebM reliably—use mic during export for narration, or preview here only.</p>
+    <div id="gvp-panel" class="dg-style-panel">
+        <h4>TTS preview</h4>
+        <p class="hint">Browser TTS cannot be mixed into WebM reliably—use mic during export for narration, or preview here only. If you hear echo, set “Hear mic” to 0 in Export and use headphones.</p>
         <textarea id="ttsText" placeholder="Script to speak…"></textarea>
         <label>Rate / Pitch</label>
         <div class="row">
@@ -322,6 +335,7 @@
             <button type="button" id="btnPickProject">Load JSON file</button>
         </div>
         <input type="file" id="projectFileInput" accept="application/json,.json" style="display:none" />
+        <a id="exportDownload" href="#" download="gvp-export.webm">Download last export</a>
     </div>
 
     <div id="hud">
@@ -453,6 +467,16 @@
             rainAreaDepth: 1000  // Add this line
         };
 
+        /** Levels for Web Audio (Export folder in dat.GUI). micMonitor 0 = no live mic to speakers (reduces echo). */
+        const gvpControls = {
+            videoGain: 0.7,
+            micGain: 1,
+            videoMonitor: 1,
+            micMonitor: 0,
+        };
+
+        let gvpMainGui = null;
+
         const bgColorPicker = document.getElementById('bgColorPicker');
         bgColorPicker.addEventListener('input', () => {
             settings.clearColor = bgColorPicker.value;
@@ -515,8 +539,8 @@
         }
 
         function initRainGui() {
-            const gui = new dat.GUI({ width: 300 });
-            const fr = gui.addFolder('Rain');
+            gvpMainGui = new dat.GUI({ width: 300 });
+            const fr = gvpMainGui.addFolder('Rain');
             fr.add(settings, 'rainCount', 0, 9999, 1).onChange(() => updateRainCountDisplay());
             fr.add(settings, 'rainHeight', 0, 1000);
             fr.add(settings, 'rainSpeed', 0, 10);
@@ -618,21 +642,18 @@
             if (mixer) {
                 mixer.timeScale = 1;
             }
-            btnPlayPause.textContent = 'Pause';
         });
         embedVideo.addEventListener('pause', () => {
             simPaused = true;
             if (mixer) {
                 mixer.timeScale = 0;
             }
-            btnPlayPause.textContent = 'Play';
         });
         embedVideo.addEventListener('ended', () => {
             simPaused = true;
             if (mixer) {
                 mixer.timeScale = 0;
             }
-            btnPlayPause.textContent = 'Play';
         });
 
         function getMixerDelta() {
@@ -879,27 +900,8 @@
             layoutVideoPlane();
         });
 
-        const btnPlayPause = document.getElementById('btnPlayPause');
-        const btnAudioInit = document.getElementById('btnAudioInit');
-        const rngVideoGain = document.getElementById('rngVideoGain');
-        const rngMicGain = document.getElementById('rngMicGain');
-        const lblVideoGain = document.getElementById('lblVideoGain');
-        const lblMicGain = document.getElementById('lblMicGain');
-        const btnExportStart = document.getElementById('btnExportStart');
-        const btnExportStop = document.getElementById('btnExportStop');
-        const exportDownload = document.getElementById('exportDownload');
         const videoFileInput = document.getElementById('videoFileInput');
-
-        document.getElementById('btnClearVideo').addEventListener('click', () => {
-            clearEmbeddedVideo();
-            timelineTime = 0;
-        });
-
-        document.getElementById('btnToggleVideoPlane').addEventListener('click', () => {
-            if (videoPlane) {
-                videoPlane.visible = !videoPlane.visible;
-            }
-        });
+        const exportDownload = document.getElementById('exportDownload');
 
         videoFileInput.addEventListener('change', (e) => {
             const f = e.target.files && e.target.files[0];
@@ -910,7 +912,29 @@
             timelineTime = 0;
         });
 
-        btnPlayPause.addEventListener('click', async () => {
+        function syncAudioFromControls() {
+            if (!audioGraph) {
+                return;
+            }
+            audioGraph.gainVideo.gain.value = gvpControls.videoGain;
+            audioGraph.gainMic.gain.value = gvpControls.micGain;
+            audioGraph.gainVideoMonitor.gain.value = gvpControls.videoMonitor;
+            audioGraph.gainMicMonitor.gain.value = gvpControls.micMonitor;
+        }
+
+        function refreshExportGuiDisplay() {
+            const ex = gvpMainGui && gvpMainGui.__folders && gvpMainGui.__folders.Export;
+            if (!ex || !ex.__controllers) {
+                return;
+            }
+            ex.__controllers.forEach((c) => {
+                if (typeof c.updateDisplay === 'function') {
+                    c.updateDisplay();
+                }
+            });
+        }
+
+        async function togglePlayPause() {
             simPaused = !simPaused;
             if (hasEmbeddedVideo && embedVideo.src) {
                 try {
@@ -926,36 +950,23 @@
             if (mixer) {
                 mixer.timeScale = simPaused ? 0 : 1;
             }
-            btnPlayPause.textContent = simPaused ? 'Play' : 'Pause';
-        });
+        }
 
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && e.target === document.body) {
                 e.preventDefault();
-                btnPlayPause.click();
+                togglePlayPause();
             }
         });
 
-        function syncGainLabels() {
-            lblVideoGain.textContent = Number(rngVideoGain.value).toFixed(2);
-            lblMicGain.textContent = Number(rngMicGain.value).toFixed(2);
-            if (audioGraph) {
-                audioGraph.gainVideo.gain.value = Number(rngVideoGain.value);
-                audioGraph.gainMic.gain.value = Number(rngMicGain.value);
-            }
-        }
-
-        rngVideoGain.addEventListener('input', syncGainLabels);
-        rngMicGain.addEventListener('input', syncGainLabels);
-
-        btnAudioInit.addEventListener('click', async () => {
+        async function doInitAudio() {
             try {
                 if (!micStream) {
                     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 }
                 if (!audioGraph) {
                     audioGraph = createAudioGraph(embedVideo, micStream);
-                    syncGainLabels();
+                    syncAudioFromControls();
                 } else {
                     audioGraph.setMicStream(micStream);
                 }
@@ -964,11 +975,14 @@
                 console.error(err);
                 alert('Could not init audio (mic permission or Web Audio).');
             }
-        });
+        }
 
-        btnExportStart.addEventListener('click', async () => {
+        let exportGuiStopController = null;
+        let exportGuiStartController = null;
+
+        async function doStartExport() {
             if (!audioGraph) {
-                alert('Click “Init audio” first (needs mic + mixed output).');
+                alert('Use “Init audio” in Export first (mic + mix).');
                 return;
             }
             try {
@@ -977,29 +991,99 @@
                     fps: 30,
                     videoBitsPerSecond: 2_500_000,
                 });
-                btnExportStop.disabled = false;
-                btnExportStart.disabled = true;
+                if (exportGuiStopController) {
+                    exportGuiStopController.domElement.style.pointerEvents = '';
+                    exportGuiStopController.domElement.style.opacity = '1';
+                }
+                if (exportGuiStartController) {
+                    exportGuiStartController.domElement.style.pointerEvents = 'none';
+                    exportGuiStartController.domElement.style.opacity = '0.5';
+                }
             } catch (err) {
                 console.error(err);
                 alert('Export failed to start.');
             }
-        });
+        }
 
-        btnExportStop.addEventListener('click', async () => {
-            if (!exportController) return;
+        async function doStopExport() {
+            if (!exportController) {
+                return;
+            }
             try {
                 const blob = await exportController.stop();
                 const url = URL.createObjectURL(blob);
                 exportDownload.href = url;
-                exportDownload.style.display = 'block';
+                exportDownload.classList.add('is-ready');
             } catch (err) {
                 console.error(err);
                 alert('Export stop failed.');
             }
             exportController = null;
-            btnExportStop.disabled = true;
-            btnExportStart.disabled = false;
-        });
+            if (exportGuiStopController) {
+                exportGuiStopController.domElement.style.pointerEvents = 'none';
+                exportGuiStopController.domElement.style.opacity = '0.5';
+            }
+            if (exportGuiStartController) {
+                exportGuiStartController.domElement.style.pointerEvents = '';
+                exportGuiStartController.domElement.style.opacity = '1';
+            }
+        }
+
+        const gvpExportActions = {
+            pickVideoFile() {
+                videoFileInput.click();
+            },
+            clearVideo() {
+                clearEmbeddedVideo();
+                timelineTime = 0;
+            },
+            togglePlane() {
+                if (videoPlane) {
+                    videoPlane.visible = !videoPlane.visible;
+                }
+            },
+            togglePause() {
+                togglePlayPause();
+            },
+            initAudio() {
+                doInitAudio();
+            },
+            startExport() {
+                doStartExport();
+            },
+            stopExport() {
+                doStopExport();
+            },
+        };
+
+        function initExportGuiFolder() {
+            if (!gvpMainGui) {
+                return;
+            }
+            const ex = gvpMainGui.addFolder('Export');
+            ex.add(gvpExportActions, 'pickVideoFile').name('Load embedded video');
+            ex.add(gvpExportActions, 'clearVideo').name('Clear video');
+            ex.add(gvpExportActions, 'togglePlane').name('Toggle video plane');
+            ex.add(gvpExportActions, 'togglePause').name('Toggle pause (Space)');
+            ex.add(gvpExportActions, 'initAudio').name('Init audio (mic + mix)');
+            ex.add(gvpControls, 'videoGain', 0, 1, 0.01).name('Video → recording').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'micGain', 0, 2, 0.01).name('Mic → recording').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'videoMonitor', 0, 1, 0.01)
+                .name('Hear embedded (speakers)')
+                .onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'micMonitor', 0, 1, 0.01)
+                .name('Hear mic (use 0 if echo)')
+                .onChange(syncAudioFromControls);
+            exportGuiStartController = ex.add(gvpExportActions, 'startExport').name('Start WebM export');
+            exportGuiStopController = ex.add(gvpExportActions, 'stopExport').name('Stop export');
+            if (exportGuiStopController) {
+                exportGuiStopController.domElement.style.pointerEvents = 'none';
+                exportGuiStopController.domElement.style.opacity = '0.5';
+            }
+            ex.open();
+        }
+
+        initExportGuiFolder();
 
         function populateTtsVoices() {
             const sel = document.getElementById('ttsVoice');
@@ -1075,8 +1159,10 @@
                 rainColor: settings.rainColor,
                 rainAreaWidth: settings.rainAreaWidth,
                 rainAreaDepth: settings.rainAreaDepth,
-                gainVideo: parseFloat(rngVideoGain.value),
-                gainMic: parseFloat(rngMicGain.value),
+                gainVideo: gvpControls.videoGain,
+                gainMic: gvpControls.micGain,
+                gainVideoMonitor: gvpControls.videoMonitor,
+                gainMicMonitor: gvpControls.micMonitor,
                 commentaryCues: commentaryCues.map((c) => ({ ...c })),
                 videoFileName,
                 embedVideoArrayBuffer,
@@ -1108,9 +1194,12 @@
             settings.rainCount = data.rainCount ?? settings.rainCount;
             clearRainMeshes();
             initRain();
-            rngVideoGain.value = String(data.gainVideo ?? 0.7);
-            rngMicGain.value = String(data.gainMic ?? 1);
-            syncGainLabels();
+            gvpControls.videoGain = data.gainVideo ?? 0.7;
+            gvpControls.micGain = data.gainMic ?? 1;
+            gvpControls.videoMonitor = data.gainVideoMonitor ?? 1;
+            gvpControls.micMonitor = data.gainMicMonitor ?? 0;
+            refreshExportGuiDisplay();
+            syncAudioFromControls();
             commentaryCues.length = 0;
             (data.commentaryCues || []).forEach((c) => commentaryCues.push({ ...c }));
             renderCueList();
