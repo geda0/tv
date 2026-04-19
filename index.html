@@ -166,6 +166,89 @@
             background-color: #4b0075;
         }
 
+        #gvp-panel {
+            position: fixed;
+            top: 48px;
+            right: 8px;
+            width: min(340px, 94vw);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            background: rgba(20, 20, 24, 0.92);
+            color: #eee;
+            font-family: system-ui, sans-serif;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            z-index: 200;
+            box-sizing: border-box;
+        }
+
+        #gvp-panel h4 {
+            margin: 8px 0 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #c9b8e8;
+        }
+
+        #gvp-panel label {
+            display: block;
+            margin-top: 6px;
+        }
+
+        #gvp-panel input[type="range"] {
+            width: 100%;
+        }
+
+        #gvp-panel button,
+        #gvp-panel select,
+        #gvp-panel textarea {
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 4px;
+        }
+
+        #gvp-panel textarea {
+            min-height: 56px;
+            resize: vertical;
+        }
+
+        #gvp-panel .row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-top: 6px;
+        }
+
+        #gvp-panel .row button {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        #gvp-panel .hint {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        #gvp-panel #cueList {
+            max-height: 120px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+
+        #embedVideo {
+            position: fixed;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         footer p {
             margin: 0;
         }
@@ -185,11 +268,76 @@
     <button id="stopRecordingButton" style="display:none;">Stop Recording</button>
     <div id="tracksContainer"></div>
 
+    <video id="embedVideo" playsinline crossorigin="anonymous"></video>
+
+    <div id="gvp-panel">
+        <h4>Export &amp; video</h4>
+        <label>Embedded video (optional)</label>
+        <input type="file" id="videoFileInput" accept="video/*" />
+        <div class="row">
+            <button type="button" id="btnClearVideo">Clear video</button>
+            <button type="button" id="btnToggleVideoPlane">Toggle plane</button>
+        </div>
+        <div class="row">
+            <button type="button" id="btnPlayPause">Pause</button>
+            <button type="button" id="btnAudioInit">Init audio</button>
+        </div>
+        <label>Video gain <span id="lblVideoGain">0.7</span></label>
+        <input type="range" id="rngVideoGain" min="0" max="1" step="0.01" value="0.7" />
+        <label>Mic gain <span id="lblMicGain">1</span></label>
+        <input type="range" id="rngMicGain" min="0" max="2" step="0.01" value="1" />
+        <div class="row">
+            <button type="button" id="btnExportStart">Start export</button>
+            <button type="button" id="btnExportStop" disabled>Stop export</button>
+        </div>
+        <a id="exportDownload" href="#" download="gvp-export.webm" style="display:none;">Download last export</a>
+
+        <h4>TTS preview (Web Speech)</h4>
+        <p class="hint">Browser TTS cannot be mixed into WebM reliably—use mic during export for narration, or preview here only.</p>
+        <textarea id="ttsText" placeholder="Script to speak…"></textarea>
+        <label>Rate / Pitch</label>
+        <div class="row">
+            <input type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1" style="flex:1" />
+            <input type="range" id="ttsPitch" min="0" max="2" step="0.05" value="1" style="flex:1" />
+        </div>
+        <label>Voice</label>
+        <select id="ttsVoice"></select>
+        <button type="button" id="btnTtsPreview">Preview TTS</button>
+
+        <h4>Commentary cues</h4>
+        <p class="hint">Bookmarks at current timeline time (metadata for editing; export uses live mix above).</p>
+        <div class="row">
+            <button type="button" id="btnAddCue">Add cue</button>
+            <button type="button" id="btnClearCues">Clear all</button>
+        </div>
+        <div id="cueList"></div>
+
+        <h4>Project</h4>
+        <div class="row">
+            <button type="button" id="btnSaveProject">Save to browser</button>
+            <button type="button" id="btnLoadProject">Load from browser</button>
+        </div>
+        <div class="row">
+            <button type="button" id="btnDownloadProject">Download JSON</button>
+            <button type="button" id="btnPickProject">Load JSON file</button>
+        </div>
+        <input type="file" id="projectFileInput" accept="application/json,.json" style="display:none" />
+    </div>
 
     <div id="hud">
         <input type="color" id="bgColorPicker" class="color-picker" value="#119911">
         <label for="bgColorPicker" class="color-picker">♧</label>
-
+        <div id="languageSelector">
+            <label for="language">Language:</label>
+            <select id="language">
+                <option value="en-US">English</option>
+                <option value="es-ES">Spanish</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="ar-SA">Arabic</option>
+                <option value="ar-EG">3arabi</option>
+            </select>
+        </div>
     </div>
     <div class="question-mark-button" id="questionMarkButton">?</div>
 
@@ -224,7 +372,8 @@
         {
             "imports": {
                 "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+                "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/",
+                "gvp": "./gvp.js"
             }
         }
     </script>
@@ -236,6 +385,14 @@
         import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
         import { FontLoader } from 'three/addons/loaders/FontLoader.js';
         import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+        import {
+            createAudioGraph,
+            startCanvasExport,
+            saveProjectToIndexedDB,
+            loadProjectFromIndexedDB,
+            downloadJson,
+            readJsonFile,
+        } from 'gvp';
 
         let loadedFont = null;
 
@@ -256,364 +413,7 @@
             });
         }
 
-
-        class Settings {
-            constructor() {
-                this.raindropSize = 0.5;
-                this.raindropSpeed = 5;
-                this.rotationSpeed = 0.01;
-                this.wPosition = 0;
-                this.wRotation = 0;
-            }
-        }
-
-        class Vector4 {
-            constructor(x = 0, y = 0, z = 0, w = 0) {
-                this.x = x;
-                this.y = y;
-                this.z = z;
-                this.w = w;
-            }
-
-            add(v) {
-                return new Vector4(this.x + v.x, this.y + v.y, this.z + v.z, this.w + v.w);
-            }
-        }
-
-        class Matrix5 {
-            constructor() {
-                this.elements = new Float32Array(25).fill(0);
-            }
-
-            // Add matrix operations (multiplication, inversion, etc.) as needed...
-        }
-
-        class FourDCamera extends THREE.Camera {
-            constructor(fov, aspect, near, far) {
-                super();
-                this.projectionMatrix = new Matrix5();
-                // Set up the initial projection matrix
-            }
-
-            // Implement methods to update the projection matrix and other camera properties as needed...
-        }
-
-        class TesseractGeometry extends THREE.BufferGeometry {
-            constructor() {
-                super();
-                // Generate 4D vertices, edges, and faces
-                // Create custom vertex attributes for the 4D vertices and normals
-            }
-        }
-
-
-        class Raindrop4D extends THREE.BufferGeometry {
-            constructor(radius, widthSegments, heightSegments) {
-                super();
-
-                const raindropGeo = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-                this.setIndex(raindropGeo.index);
-                this.setAttribute('position', raindropGeo.getAttribute('position'));
-                this.setAttribute('normal', raindropGeo.getAttribute('normal'));
-
-                const vertexCount = raindropGeo.getAttribute('position').count;
-                const position4D = new Float32Array(vertexCount * 4);
-                const wValues = [0, 0, 0, 1]; // Modify these values to experiment with different 4D positions
-
-                for (let i = 0; i < vertexCount; i++) {
-                    const position3D = raindropGeo.getAttribute('position').array.slice(i * 3, i * 3 + 3);
-                    position4D.set(position3D, i * 4);
-                    position4D[i * 4 + 3] = wValues[i % 4];
-                }
-
-                this.setAttribute('position4D', new THREE.BufferAttribute(position4D, 4));
-            }
-        }
-
-
-
-        class FourDMaterial extends THREE.ShaderMaterial {
-            constructor() {
-                const uniforms = THREE.UniformsUtils.merge([
-                    THREE.UniformsLib.common,
-                    {
-                        projectionMatrix4D: { value: [new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4(), new THREE.Vector4()] },
-                    },
-                ]);
-
-
-                const vertexShader = `
-  attribute vec4 position4D;
-  uniform vec4 projectionMatrix4D[4];
-  varying vec3 vPosition;
-  varying vec3 vNormal;
-  void main() {
-    vPosition = position;
-    vNormal = normal;
-    vec4 position3D = vec4(
-      dot(position4D, projectionMatrix4D[0]),
-      dot(position4D, projectionMatrix4D[1]),
-      dot(position4D, projectionMatrix4D[2]),
-      dot(position4D, projectionMatrix4D[3])
-    );
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position3D.xyz, 1.0);
-  }
-`;
-
-
-                const fragmentShader = `
-    uniform vec3 diffuse;
-    varying vec3 vPosition;
-    varying vec3 vNormal;
-    void main() {
-    vec3 light = normalize(vec3(1.0, 1.0, 1.0));
-    float brightness = max(dot(vNormal, light), 0.1);
-    gl_FragColor = vec4(diffuse * brightness, 0.5);
-    }
-`;
-
-                super({
-                    uniforms: uniforms,
-                    vertexShader: vertexShader,
-                    fragmentShader: fragmentShader,
-                    transparent: true,
-                });
-            }
-        }
-
-
-        class Four {
-
-            constructor(container) {
-                this.container = container;
-                this.clock = clock;
-                this.renderer = null;
-                this.scene = null;
-                this.camera = null;
-                this.width = window.innerWidth;
-                this.height = window.innerHeight;
-                this.raindrops = [];
-                this.initKeyboardControls();
-                this.settings = new Settings();
-                this.initRain();
-                this.initGUI();
-            }
-
-            initRain() {
-                const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
-                const rainMaterial = new THREE.MeshBasicMaterial({ color: settings.rainColor, transparent: true, opacity: 0.5 });
-
-                for (let i = 0; i < settings.rainCount; i++) {
-                    const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
-                    raindrop.position.set(Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
-                        Math.random() * settings.rainHeight,
-                        Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2);
-
-                    scene.add(raindrop);
-                    rain.push(raindrop);
-                }
-            }
-
-            initGUI() {
-                const gui = new dat.GUI();
-                const folder4D = gui.addFolder('4D Controls');
-                folder4D.add(this.settings, 'raindropSize', 0.01, 40).onChange(() => this.updateRaindropSize());
-                folder4D.add(this.settings, 'raindropSpeed', -100, 100);
-                folder4D.add(this.settings, 'rotationSpeed', -1, 1);
-                folder4D.add(this.settings, 'wPosition', -500, 500);
-                folder4D.add(this.settings, 'wRotation', -Math.PI, Math.PI);
-                // folder4D.open();
-
-                // Add a folder for rain settings
-                const folderRain = gui.addFolder('Rain Settings');
-                folderRain.add(settings, 'rainCount', 0, 9999).onChange(() => this.updateRainCount());
-                folderRain.add(settings, 'rainHeight', 0, 1000);
-                folderRain.add(settings, 'rainSpeed', 0, 10);
-                folderRain.addColor(settings, 'rainColor').onChange(() => this.updateRainColor());
-            }
-
-
-            updateRainColor() {
-                const rainColor = new THREE.Color(settings.rainColor);
-                for (let i = 0; i < rain.length; i++) {
-                    const raindrop = rain[i];
-                    raindrop.material.color.set(rainColor);
-                }
-            }
-
-
-            updateRainCount() {
-                const currentCount = rain.length;
-                const newCount = settings.rainCount;
-                const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
-                const rainMaterial = new THREE.MeshBasicMaterial({ color: settings.rainColor, transparent: true, opacity: 0.5 });
-
-                if (newCount > currentCount) {
-                    for (let i = currentCount; i < newCount; i++) {
-                        const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
-                        raindrop.position.set(Math.random() * 400 - 200, Math.random() * settings.rainHeight, Math.random() * 500 - 200);
-                        scene.add(raindrop);
-                        rain.push(raindrop);
-                    }
-                } else {
-                    for (let i = currentCount - 1; i >= newCount; i--) {
-                        const raindrop = rain[i];
-                        scene.remove(raindrop);
-                        rain.pop();
-                    }
-                }
-            }
-
-            updateRainHeight() {
-                for (let i = 0; i < rain.length; i++) {
-                    const raindrop = rain[i];
-                    raindrop.position.set(Math.random() * 400 - 200, Math.random() * settings.rainHeight, Math.random() * 500 - 200);
-                }
-            }
-
-            initScene() {
-                this.scene = new THREE.Scene();
-            }
-
-            initCamera() {
-                this.camera = camera;
-            }
-
-            animate() {
-                requestAnimationFrame(() => this.animate());
-                this.render();
-            }
-
-            initKeyboardControls() {
-                document.addEventListener('keydown', (event) => this.onKeyDown(event));
-                document.addEventListener('keyup', (event) => this.onKeyUp(event));
-            }
-
-            updateRaindropSize() {
-                for (const raindrop of this.raindrops) {
-                    const newRaindropGeo = new Raindrop4D(this.settings.raindropSize, 8, 8);
-                    raindrop.geometry.copy(newRaindropGeo);
-                }
-            }
-
-            initObjects() {
-                const raindrop = new Raindrop4D(this.settings.raindropSize, 8, 8);
-                const material = new FourDMaterial();
-                const mesh = new THREE.Mesh(raindrop, material);
-                mesh.name = 'raindrop';
-                this.scene.add(mesh);
-            }
-
-            onKeyDown(event) {
-                if (event.code === 'ArrowUp') {
-                    this.translateRaindrop4D(0.1);
-                } else if (event.code === 'ArrowDown') {
-                    this.translateRaindrop4D(-0.1);
-                }
-            }
-
-            onKeyUp(event) {
-                // Handle key up events (if needed)
-            }
-
-            translateRaindrop4D(dw) {
-                dw = this.settings.wPosition;
-                const raindrop = this.scene.getObjectByName('raindrop');
-                if (!raindrop) return;
-                const position4D = raindrop.geometry.getAttribute('position4D');
-                for (let i = 0; i < position4D.count; i++) {
-                    position4D.array[i * 4 + 3] += dw;
-                }
-                position4D.needsUpdate = true;
-            }
-
-            rotateScene4D() {
-                const wRotation = this.settings.wRotation;
-                const sinW = Math.sin(wRotation);
-                const cosW = Math.cos(wRotation);
-
-                for (const raindrop of this.raindrops) {
-                    const position4D = raindrop.geometry.getAttribute('position4D');
-
-                    for (let i = 0; i < position4D.count; i++) {
-                        const z = position4D.array[i * 4 + 2];
-                        const w = position4D.array[i * 4 + 3];
-
-                        position4D.array[i * 4 + 2] = z * cosW - w * sinW;
-                        position4D.array[i * 4 + 3] = z * sinW + w * cosW;
-                    }
-
-                    position4D.needsUpdate = true;
-                }
-            }
-
-
-            start() {
-                this.initRenderer();
-                this.initScene();
-                this.initCamera();
-                this.animate();
-                this.initObjects();
-            }
-
-            initRenderer() {
-                this.renderer = new THREE.WebGLRenderer({ antialias: true });
-                this.renderer.setSize(this.width, this.height);
-                this.container.appendChild(this.renderer.domElement);
-            }
-
-            initObjects() {
-                const numRaindrops = 100;
-
-                for (let i = 0; i < numRaindrops; i++) {
-                    const raindrop = new Raindrop4D(0.5, 8, 8);
-                    const material = new FourDMaterial();
-                    const mesh = new THREE.Mesh(raindrop, material);
-                    mesh.position.set(Math.random() * 50 - 25, Math.random() * 50 - 25, Math.random() * 50 - 25);
-                    mesh.userData.w = Math.random() * 50 - 25; // Set initial w-coordinate
-                    this.raindrops.push(mesh);
-                    this.scene.add(mesh);
-                }
-            }
-
-            updateRaindrops(deltaTime) {
-                const speed = this.settings.raindropSpeed;
-
-                for (const raindrop of this.raindrops) {
-                    raindrop.userData.w += deltaTime * speed;
-                    const position4D = raindrop.geometry.getAttribute('position4D');
-
-                    for (let i = 0; i < position4D.count; i++) {
-                        position4D.array[i * 4 + 3] = raindrop.userData.w;
-                    }
-
-                    position4D.needsUpdate = true;
-                }
-            }
-
-
-            rotateScene(deltaTime) {
-                const rotationSpeed = this.settings.rotationSpeed;
-                this.scene.rotation.x += rotationSpeed * deltaTime;
-                this.scene.rotation.y += rotationSpeed * deltaTime;
-            }
-
-            render() {
-                const deltaTime = this.clock.getDelta();
-                this.updateRaindrops(deltaTime);
-                this.rotateScene(deltaTime);
-                this.rotateScene4D();
-                this.renderer.render(this.scene, this.camera);
-            }
-        }
-
-
-        document.addEventListener("DOMContentLoaded", function () {
-            const container = document.getElementsByTagName("canvas")[0];
-            const four = new Four(container);
-            four.start();
-        });
-
+        const clock = new THREE.Clock();
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(99, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 200, 500);
@@ -632,7 +432,6 @@
         scene.add(light);
 
         const loader = new FBXLoader();
-        const clock = new THREE.Clock();
         let mixer;
         let character;
         let stickmanArmAngle = 0;
@@ -656,8 +455,190 @@
 
         const bgColorPicker = document.getElementById('bgColorPicker');
         bgColorPicker.addEventListener('input', () => {
-            renderer.setClearColor(bgColorPicker.value);
+            settings.clearColor = bgColorPicker.value;
+            renderer.setClearColor(settings.clearColor);
         });
+        renderer.setClearColor(settings.clearColor);
+
+        function initRain() {
+            const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
+            const rainMaterial = new THREE.MeshBasicMaterial({
+                color: settings.rainColor,
+                transparent: true,
+                opacity: 0.5,
+            });
+            for (let i = 0; i < settings.rainCount; i++) {
+                const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
+                raindrop.position.set(
+                    Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
+                    Math.random() * settings.rainHeight,
+                    Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2
+                );
+                scene.add(raindrop);
+                rain.push(raindrop);
+            }
+        }
+
+        function updateRainColorDisplay() {
+            const rainColor = new THREE.Color(settings.rainColor);
+            for (let i = 0; i < rain.length; i++) {
+                rain[i].material.color.set(rainColor);
+            }
+        }
+
+        function updateRainCountDisplay() {
+            const currentCount = rain.length;
+            const newCount = Math.floor(settings.rainCount);
+            const rainGeo = new THREE.SphereGeometry(0.5, 8, 8);
+            const rainMaterial = new THREE.MeshBasicMaterial({
+                color: settings.rainColor,
+                transparent: true,
+                opacity: 0.5,
+            });
+            if (newCount > currentCount) {
+                for (let i = currentCount; i < newCount; i++) {
+                    const raindrop = new THREE.Mesh(rainGeo, rainMaterial);
+                    raindrop.position.set(
+                        Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2,
+                        Math.random() * settings.rainHeight,
+                        Math.random() * settings.rainAreaDepth - settings.rainAreaDepth / 2
+                    );
+                    scene.add(raindrop);
+                    rain.push(raindrop);
+                }
+            } else {
+                for (let i = currentCount - 1; i >= newCount; i--) {
+                    scene.remove(rain[i]);
+                    rain.pop();
+                }
+            }
+        }
+
+        function initRainGui() {
+            const gui = new dat.GUI({ width: 300 });
+            const fr = gui.addFolder('Rain');
+            fr.add(settings, 'rainCount', 0, 9999, 1).onChange(() => updateRainCountDisplay());
+            fr.add(settings, 'rainHeight', 0, 1000);
+            fr.add(settings, 'rainSpeed', 0, 10);
+            fr.addColor(settings, 'rainColor').onChange(() => updateRainColorDisplay());
+            fr.open();
+        }
+
+        initRain();
+        initRainGui();
+
+        const embedVideo = document.getElementById('embedVideo');
+        let videoTexture = null;
+        let videoPlane = null;
+        let hasEmbeddedVideo = false;
+        let simPaused = false;
+        let timelineTime = 0;
+        let audioGraph = null;
+        let micStream = null;
+        let exportController = null;
+        const commentaryCues = [];
+        let selectedCharacterId = null;
+
+        function layoutVideoPlane() {
+            if (!videoPlane || !embedVideo.videoWidth) return;
+            const vw = embedVideo.videoWidth;
+            const vh = embedVideo.videoHeight;
+            const aspect = vw / vh;
+            const h = 280;
+            const w = h * aspect;
+            videoPlane.geometry.dispose();
+            videoPlane.geometry = new THREE.PlaneGeometry(w, h);
+            videoPlane.position.set(0, 120, -320);
+        }
+
+        function clearEmbeddedVideo() {
+            if (videoPlane) {
+                scene.remove(videoPlane);
+                videoPlane.geometry.dispose();
+                videoPlane.material.map?.dispose();
+                videoPlane.material.dispose();
+                videoPlane = null;
+            }
+            if (videoTexture) {
+                videoTexture.dispose();
+                videoTexture = null;
+            }
+            if (embedVideo.src && embedVideo.src.startsWith('blob:')) {
+                URL.revokeObjectURL(embedVideo.src);
+            }
+            embedVideo.pause();
+            embedVideo.removeAttribute('src');
+            embedVideo.load();
+            hasEmbeddedVideo = false;
+        }
+
+        function setEmbeddedVideoFromObjectUrl(url) {
+            clearEmbeddedVideo();
+            embedVideo.src = url;
+            embedVideo.loop = false;
+            embedVideo.playsInline = true;
+            embedVideo.crossOrigin = 'anonymous';
+            embedVideo.load();
+        }
+
+        function buildVideoPlaneFromEmbed() {
+            if (!embedVideo.videoWidth) {
+                return;
+            }
+            if (videoPlane) {
+                scene.remove(videoPlane);
+                videoPlane.geometry.dispose();
+                videoPlane.material.map?.dispose();
+                videoPlane.material.dispose();
+                videoPlane = null;
+            }
+            if (videoTexture) {
+                videoTexture.dispose();
+                videoTexture = null;
+            }
+            videoTexture = new THREE.VideoTexture(embedVideo);
+            if ('encoding' in videoTexture) {
+                videoTexture.encoding = THREE.sRGBEncoding;
+            }
+            const mat = new THREE.MeshBasicMaterial({
+                map: videoTexture,
+                side: THREE.DoubleSide,
+            });
+            const geo = new THREE.PlaneGeometry(16, 9);
+            videoPlane = new THREE.Mesh(geo, mat);
+            layoutVideoPlane();
+            scene.add(videoPlane);
+            hasEmbeddedVideo = true;
+        }
+
+        embedVideo.addEventListener('loadeddata', buildVideoPlaneFromEmbed);
+
+        embedVideo.addEventListener('play', () => {
+            simPaused = false;
+            if (mixer) {
+                mixer.timeScale = 1;
+            }
+            btnPlayPause.textContent = 'Pause';
+        });
+        embedVideo.addEventListener('pause', () => {
+            simPaused = true;
+            if (mixer) {
+                mixer.timeScale = 0;
+            }
+            btnPlayPause.textContent = 'Play';
+        });
+        embedVideo.addEventListener('ended', () => {
+            simPaused = true;
+            if (mixer) {
+                mixer.timeScale = 0;
+            }
+            btnPlayPause.textContent = 'Play';
+        });
+
+        function getMixerDelta() {
+            const d = clock.getDelta();
+            return simPaused ? 0 : d;
+        }
 
         function createStickman() {
             const stickmanMaterial = new THREE.MeshBasicMaterial({ color: 0x991199 });
@@ -703,29 +684,40 @@
 
         const stickman = createStickman();
         // Update model buttons event listeners
+        const characterById = {
+            m1: 'models/Ch03_nonPBR.fbx',
+            m2: 'models/Aj.fbx',
+            m3: 'models/Remy.fbx',
+            m4: 'models/passive_marker_man.fbx',
+        };
+
         model1Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Ch03_nonPBR.fbx', animations);
+            selectedCharacterId = 'm1';
+            await loadCharacterModel(characterById.m1, animations);
         });
 
         model2Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Aj.fbx', animations);
+            selectedCharacterId = 'm2';
+            await loadCharacterModel(characterById.m2, animations);
         });
 
         model3Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/Remy.fbx', animations);
+            selectedCharacterId = 'm3';
+            await loadCharacterModel(characterById.m3, animations);
         });
 
 
         model4Button.addEventListener('click', async () => {
             modelSelection.style.display = 'none';
             scene.add(stickman);
-            await loadCharacterModel('models/passive_marker_man.fbx', animations);
+            selectedCharacterId = 'm4';
+            await loadCharacterModel(characterById.m4, animations);
         });
 
         function animateStickman() {
@@ -846,17 +838,22 @@
 
         const animate = function () {
             requestAnimationFrame(animate);
-            const delta = clock.getDelta();
+            const delta = getMixerDelta();
             animateStickman();
-            // TWEEN.update();
-            if (mixer) {
-                mixer.update(delta);
+            if (videoTexture) {
+                videoTexture.needsUpdate = true;
             }
             updateCharacter(delta);
 
+            if (!simPaused) {
+                if (!hasEmbeddedVideo || !embedVideo.src) {
+                    timelineTime += delta;
+                }
+            }
+
             for (let i = 0; i < rain.length; i++) {
                 const raindrop = rain[i];
-                raindrop.position.y -= settings.rainSpeed;
+                raindrop.position.y -= settings.rainSpeed * (simPaused ? 0 : 1);
                 if (raindrop.position.y < 0) {
                     raindrop.position.y = Math.random() * settings.rainHeight;
                     raindrop.position.x = Math.random() * settings.rainAreaWidth - settings.rainAreaWidth / 2;
@@ -868,15 +865,340 @@
             renderer.render(scene, camera);
         };
 
+        function getTimelineNow() {
+            if (hasEmbeddedVideo && embedVideo.src) {
+                return embedVideo.currentTime;
+            }
+            return timelineTime;
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            layoutVideoPlane();
+        });
+
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnAudioInit = document.getElementById('btnAudioInit');
+        const rngVideoGain = document.getElementById('rngVideoGain');
+        const rngMicGain = document.getElementById('rngMicGain');
+        const lblVideoGain = document.getElementById('lblVideoGain');
+        const lblMicGain = document.getElementById('lblMicGain');
+        const btnExportStart = document.getElementById('btnExportStart');
+        const btnExportStop = document.getElementById('btnExportStop');
+        const exportDownload = document.getElementById('exportDownload');
+        const videoFileInput = document.getElementById('videoFileInput');
+
+        document.getElementById('btnClearVideo').addEventListener('click', () => {
+            clearEmbeddedVideo();
+            timelineTime = 0;
+        });
+
+        document.getElementById('btnToggleVideoPlane').addEventListener('click', () => {
+            if (videoPlane) {
+                videoPlane.visible = !videoPlane.visible;
+            }
+        });
+
+        videoFileInput.addEventListener('change', (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (!f) return;
+            embedVideo.dataset.fileName = f.name;
+            const url = URL.createObjectURL(f);
+            setEmbeddedVideoFromObjectUrl(url);
+            timelineTime = 0;
+        });
+
+        btnPlayPause.addEventListener('click', async () => {
+            simPaused = !simPaused;
+            if (hasEmbeddedVideo && embedVideo.src) {
+                try {
+                    if (simPaused) {
+                        embedVideo.pause();
+                    } else {
+                        await embedVideo.play();
+                    }
+                } catch (err) {
+                    console.warn(err);
+                }
+            }
+            if (mixer) {
+                mixer.timeScale = simPaused ? 0 : 1;
+            }
+            btnPlayPause.textContent = simPaused ? 'Play' : 'Pause';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                btnPlayPause.click();
+            }
+        });
+
+        function syncGainLabels() {
+            lblVideoGain.textContent = Number(rngVideoGain.value).toFixed(2);
+            lblMicGain.textContent = Number(rngMicGain.value).toFixed(2);
+            if (audioGraph) {
+                audioGraph.gainVideo.gain.value = Number(rngVideoGain.value);
+                audioGraph.gainMic.gain.value = Number(rngMicGain.value);
+            }
+        }
+
+        rngVideoGain.addEventListener('input', syncGainLabels);
+        rngMicGain.addEventListener('input', syncGainLabels);
+
+        btnAudioInit.addEventListener('click', async () => {
+            try {
+                if (!micStream) {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                }
+                if (!audioGraph) {
+                    audioGraph = createAudioGraph(embedVideo, micStream);
+                    syncGainLabels();
+                } else {
+                    audioGraph.setMicStream(micStream);
+                }
+                await audioGraph.context.resume();
+            } catch (err) {
+                console.error(err);
+                alert('Could not init audio (mic permission or Web Audio).');
+            }
+        });
+
+        btnExportStart.addEventListener('click', async () => {
+            if (!audioGraph) {
+                alert('Click “Init audio” first (needs mic + mixed output).');
+                return;
+            }
+            try {
+                await audioGraph.context.resume();
+                exportController = startCanvasExport(renderer.domElement, audioGraph.destination.stream, {
+                    fps: 30,
+                    videoBitsPerSecond: 2_500_000,
+                });
+                btnExportStop.disabled = false;
+                btnExportStart.disabled = true;
+            } catch (err) {
+                console.error(err);
+                alert('Export failed to start.');
+            }
+        });
+
+        btnExportStop.addEventListener('click', async () => {
+            if (!exportController) return;
+            try {
+                const blob = await exportController.stop();
+                const url = URL.createObjectURL(blob);
+                exportDownload.href = url;
+                exportDownload.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert('Export stop failed.');
+            }
+            exportController = null;
+            btnExportStop.disabled = true;
+            btnExportStart.disabled = false;
+        });
+
+        function populateTtsVoices() {
+            const sel = document.getElementById('ttsVoice');
+            const voices = speechSynthesis.getVoices();
+            sel.innerHTML = '';
+            voices.forEach((v, i) => {
+                const o = document.createElement('option');
+                o.value = String(i);
+                o.textContent = `${v.name} (${v.lang})`;
+                sel.appendChild(o);
+            });
+        }
+
+        speechSynthesis.onvoiceschanged = populateTtsVoices;
+        populateTtsVoices();
+
+        document.getElementById('btnTtsPreview').addEventListener('click', () => {
+            const text = document.getElementById('ttsText').value;
+            if (!text.trim()) return;
+            const u = new SpeechSynthesisUtterance(text);
+            const voices = speechSynthesis.getVoices();
+            const vi = parseInt(document.getElementById('ttsVoice').value, 10);
+            if (voices[vi]) {
+                u.voice = voices[vi];
+            }
+            u.rate = parseFloat(document.getElementById('ttsRate').value);
+            u.pitch = parseFloat(document.getElementById('ttsPitch').value);
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+        });
+
+        function renderCueList() {
+            const el = document.getElementById('cueList');
+            el.innerHTML = commentaryCues
+                .map(
+                    (c, i) =>
+                        `${i + 1}. t=${c.t.toFixed(2)}s — ${c.note || ''}`
+                )
+                .join('<br>');
+        }
+
+        document.getElementById('btnAddCue').addEventListener('click', () => {
+            commentaryCues.push({
+                t: getTimelineNow(),
+                note: 'cue',
+            });
+            renderCueList();
+        });
+
+        document.getElementById('btnClearCues').addEventListener('click', () => {
+            commentaryCues.length = 0;
+            renderCueList();
+        });
+
+        const PROJECT_ID = 'gvp-default';
+
+        async function buildProjectPayload() {
+            let embedVideoArrayBuffer = null;
+            let videoFileName = null;
+            if (embedVideo.src && embedVideo.src.startsWith('blob:')) {
+                const r = await fetch(embedVideo.src);
+                embedVideoArrayBuffer = await r.arrayBuffer();
+                videoFileName = embedVideo.dataset.fileName || 'embedded.mp4';
+            }
+            return {
+                version: 1,
+                savedAt: Date.now(),
+                clearColor: settings.clearColor,
+                selectedCharacterId,
+                rainCount: settings.rainCount,
+                rainHeight: settings.rainHeight,
+                rainSpeed: settings.rainSpeed,
+                rainColor: settings.rainColor,
+                rainAreaWidth: settings.rainAreaWidth,
+                rainAreaDepth: settings.rainAreaDepth,
+                gainVideo: parseFloat(rngVideoGain.value),
+                gainMic: parseFloat(rngMicGain.value),
+                commentaryCues: commentaryCues.map((c) => ({ ...c })),
+                videoFileName,
+                embedVideoArrayBuffer,
+            };
+        }
+
+        function clearRainMeshes() {
+            for (let i = rain.length - 1; i >= 0; i--) {
+                scene.remove(rain[i]);
+                rain[i].geometry.dispose();
+                rain[i].material.dispose();
+                rain.pop();
+            }
+        }
+
+        async function applyProject(data) {
+            if (!data || data.version !== 1) {
+                alert('Unsupported project file.');
+                return;
+            }
+            settings.clearColor = data.clearColor || settings.clearColor;
+            bgColorPicker.value = settings.clearColor;
+            renderer.setClearColor(settings.clearColor);
+            settings.rainColor = data.rainColor ?? settings.rainColor;
+            settings.rainHeight = data.rainHeight ?? settings.rainHeight;
+            settings.rainSpeed = data.rainSpeed ?? settings.rainSpeed;
+            settings.rainAreaWidth = data.rainAreaWidth ?? settings.rainAreaWidth;
+            settings.rainAreaDepth = data.rainAreaDepth ?? settings.rainAreaDepth;
+            settings.rainCount = data.rainCount ?? settings.rainCount;
+            clearRainMeshes();
+            initRain();
+            rngVideoGain.value = String(data.gainVideo ?? 0.7);
+            rngMicGain.value = String(data.gainMic ?? 1);
+            syncGainLabels();
+            commentaryCues.length = 0;
+            (data.commentaryCues || []).forEach((c) => commentaryCues.push({ ...c }));
+            renderCueList();
+            clearEmbeddedVideo();
+            if (data.embedVideoArrayBuffer && data.embedVideoArrayBuffer.byteLength) {
+                const blob = new Blob([data.embedVideoArrayBuffer], { type: 'video/mp4' });
+                const url = URL.createObjectURL(blob);
+                setEmbeddedVideoFromObjectUrl(url);
+            }
+            timelineTime = 0;
+            if (data.selectedCharacterId && characterById[data.selectedCharacterId]) {
+                modelSelection.style.display = 'none';
+                scene.add(stickman);
+                await loadCharacterModel(characterById[data.selectedCharacterId], animations);
+            }
+        }
+
+        document.getElementById('btnSaveProject').addEventListener('click', async () => {
+            try {
+                const payload = await buildProjectPayload();
+                await saveProjectToIndexedDB(PROJECT_ID, payload);
+                alert('Project saved in this browser.');
+            } catch (e) {
+                console.error(e);
+                alert('Save failed.');
+            }
+        });
+
+        document.getElementById('btnLoadProject').addEventListener('click', async () => {
+            try {
+                const data = await loadProjectFromIndexedDB(PROJECT_ID);
+                if (!data) {
+                    alert('No saved project found.');
+                    return;
+                }
+                await applyProject(data);
+            } catch (e) {
+                console.error(e);
+                alert('Load failed.');
+            }
+        });
+
+        document.getElementById('btnDownloadProject').addEventListener('click', async () => {
+            try {
+                const payload = await buildProjectPayload();
+                const { embedVideoArrayBuffer, ...meta } = payload;
+                downloadJson('gvp-project.json', {
+                    ...meta,
+                    embedVideoNote:
+                        embedVideoArrayBuffer && embedVideoArrayBuffer.byteLength
+                            ? 'Embedded video is not included in JSON (size). Use “Save to browser” for full fidelity, or re-attach the video file after loading this JSON.'
+                            : null,
+                });
+            } catch (e) {
+                console.error(e);
+                alert('Download failed.');
+            }
+        });
+
+        const projectFileInput = document.getElementById('projectFileInput');
+        document.getElementById('btnPickProject').addEventListener('click', () => {
+            projectFileInput.click();
+        });
+
+        projectFileInput.addEventListener('change', async (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (!f) return;
+            try {
+                const raw = await readJsonFile(f);
+                await applyProject(raw);
+            } catch (err) {
+                console.error(err);
+                alert('Invalid project JSON.');
+            }
+            projectFileInput.value = '';
+        });
 
         // Add the speech recognition initialization code
         const recognition = new (window.SpeechRecognition ||
             window.webkitSpeechRecognition ||
             window.mozSpeechRecognition ||
             window.msSpeechRecognition)();
-        recognition.lang = "en-US";
+        const languageSelector = document.getElementById('language');
+        recognition.lang = languageSelector.value;
         recognition.interimResults = true;
-        // Remove the existing startButton event listener and add the following code:
+        languageSelector.addEventListener('change', () => {
+            recognition.lang = languageSelector.value;
+        });
 
         const startButton = document.getElementById("startButton");
         startButton.addEventListener("click", function () {
