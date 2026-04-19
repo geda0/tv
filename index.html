@@ -64,7 +64,113 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            z-index: 999;
+            z-index: 1001;
+            font-size: 12px;
+        }
+
+        .studio-steps {
+            width: 100%;
+            margin: 0;
+            padding-top: 4px;
+            font-size: 10px;
+            line-height: 1.35;
+            color: #8a9bab;
+            border-top: 1px solid #2a2a30;
+        }
+
+        .studio-bar {
+            position: fixed;
+            bottom: 28px;
+            left: 0;
+            right: 0;
+            z-index: 998;
+            background: linear-gradient(180deg, #1e1e22 0%, #151518 100%);
+            border-top: 1px solid #333;
+            box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.45);
+            font: 12px system-ui, 'Segoe UI', sans-serif;
+            color: #e8e8e8;
+            padding: 8px 12px 10px;
+            box-sizing: border-box;
+        }
+
+        .studio-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 10px;
+        }
+
+        .studio-row + .studio-row {
+            margin-top: 8px;
+        }
+
+        .studio-bar button {
+            background: #2a2a30;
+            color: #eee;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .studio-bar button:hover:not(:disabled) {
+            background: #35353d;
+        }
+
+        .studio-bar button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .studio-bar button.studio-primary {
+            background: #2d6a4f;
+            border-color: #1b4332;
+        }
+
+        .studio-bar button.studio-primary:hover:not(:disabled) {
+            background: #40916c;
+        }
+
+        .studio-bar button.studio-danger {
+            background: #6a1c2b;
+            border-color: #4a1520;
+        }
+
+        #studioScrubber {
+            flex: 1;
+            min-width: 120px;
+            max-width: min(560px, 55vw);
+            accent-color: #6a0dad;
+        }
+
+        .studio-time {
+            font-variant-numeric: tabular-nums;
+            min-width: 42px;
+        }
+
+        .studio-status {
+            margin-left: auto;
+            font-size: 11px;
+            color: #9ab;
+        }
+
+        .studio-mime {
+            font-size: 10px;
+            color: #789;
+        }
+
+        .studio-dl {
+            color: #6ad;
+            font-size: 12px;
+        }
+
+        .studio-dl:not(.is-ready) {
+            display: none;
+        }
+
+        .studio-dl.is-ready {
+            display: inline;
         }
 
         #startButton {
@@ -88,15 +194,34 @@
 
         #tracksContainer {
             position: absolute;
-            bottom: 90px;
+            bottom: 114px;
             right: 10px;
             z-index: 100;
+        }
+
+        .gui-toggle-button {
+            position: fixed;
+            right: 78px;
+            bottom: 156px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #2d6a4f;
+            color: #f5f5f5;
+            border: 1px solid #1b4332;
+            border-radius: 6px;
+            padding: 8px 10px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .gui-toggle-button:hover {
+            background-color: #40916c;
         }
 
         .question-mark-button {
             position: fixed;
             right: 20px;
-            bottom: 20px;
+            bottom: 156px;
             font-size: 24px;
             background-color: #6a0dad;
             color: #f5f5f5;
@@ -170,7 +295,7 @@
         .dg-style-panel {
             position: fixed;
             left: 10px;
-            bottom: 56px;
+            bottom: 172px;
             width: 245px;
             max-height: min(42vh, 380px);
             overflow-x: hidden;
@@ -263,17 +388,6 @@
             color: #ccc;
         }
 
-        #exportDownload {
-            display: none;
-            margin-top: 8px;
-            font-size: 11px;
-            color: #6ad;
-        }
-
-        #exportDownload.is-ready {
-            display: block;
-        }
-
         #embedVideo {
             position: fixed;
             width: 1px;
@@ -304,10 +418,49 @@
     <video id="embedVideo" playsinline crossorigin="anonymous"></video>
     <input type="file" id="videoFileInput" accept="video/*" style="display:none" />
 
+    <div
+        id="studio-bar"
+        class="studio-bar"
+        role="region"
+        aria-label="Studio"
+        aria-describedby="studioStepsHint"
+    >
+        <div class="studio-row">
+            <button type="button" id="studioPlayPause" title="Play/Pause (Space)">Play</button>
+            <span class="studio-time" id="studioTimecode">0:00</span>
+            <span>/</span>
+            <span class="studio-time" id="studioDuration">0:00</span>
+            <input type="range" id="studioScrubber" min="0" max="100" step="0.05" value="0" title="Seek timeline" />
+            <span id="studioStatus" class="studio-status">Ready</span>
+        </div>
+        <div class="studio-row">
+            <button type="button" id="studioLoadVideo">Load video</button>
+            <button type="button" id="studioClearVideo">Clear video</button>
+            <button type="button" class="studio-primary" id="studioInitAudio">Init audio</button>
+            <button type="button" class="studio-primary" id="studioStartExport" disabled>Start export</button>
+            <button type="button" class="studio-danger" id="studioStopExport" disabled>Stop export</button>
+            <a id="studioExportDownload" class="studio-dl" href="#" download="gvp-export.webm">Download WebM</a>
+            <span id="studioMimeHint" class="studio-mime"></span>
+        </div>
+        <p id="studioStepsHint" class="studio-steps">
+            1 Load video (optional) · 2 Init audio · 3 Add WASM TTS cues in the panel · 4 Start export · Download WebM here.
+            Export captures the 3D canvas plus mixed audio; keep this tab focused while recording.
+        </p>
+    </div>
+
     <div id="gvp-panel" class="dg-style-panel">
-        <h4>TTS preview</h4>
-        <p class="hint">Browser TTS cannot be mixed into WebM reliably—use mic during export for narration, or preview here only. If you hear echo, set “Hear mic” to 0 in Export and use headphones.</p>
-        <textarea id="ttsText" placeholder="Script to speak…"></textarea>
+        <h4>WASM TTS (export)</h4>
+        <p class="hint">
+            Cues use Transformers.js in the browser; first run downloads the voice model. Add lines below, then use
+            <strong>Start export</strong> in the studio bar (timeline resets to 0).
+        </p>
+        <textarea id="ttsText" placeholder="Line for new cues / WASM preview…"></textarea>
+        <div class="row">
+            <button type="button" id="btnTtsWasmPreview">Preview WASM</button>
+        </div>
+
+        <h4>Web Speech (optional)</h4>
+        <p class="hint">Browser speech preview only — not mixed into WebM. Use for quick line reads.</p>
         <label>Rate / Pitch</label>
         <div class="row">
             <input type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1" style="flex:1" />
@@ -315,10 +468,12 @@
         </div>
         <label>Voice</label>
         <select id="ttsVoice"></select>
-        <button type="button" id="btnTtsPreview">Preview TTS</button>
+        <div class="row">
+            <button type="button" id="btnTtsPreview">Preview Web Speech</button>
+        </div>
 
         <h4>Commentary cues</h4>
-        <p class="hint">Bookmarks at current timeline time (metadata for editing; export uses live mix above).</p>
+        <p class="hint">Add cue = text in the box + current timeline time. Init audio before WASM preview.</p>
         <div class="row">
             <button type="button" id="btnAddCue">Add cue</button>
             <button type="button" id="btnClearCues">Clear all</button>
@@ -335,7 +490,7 @@
             <button type="button" id="btnPickProject">Load JSON file</button>
         </div>
         <input type="file" id="projectFileInput" accept="application/json,.json" style="display:none" />
-        <a id="exportDownload" href="#" download="gvp-export.webm">Download last export</a>
+        <p class="hint" style="margin-top: 8px">Exported WebM: use <strong>Download WebM</strong> in the studio bar.</p>
     </div>
 
     <div id="hud">
@@ -353,6 +508,7 @@
             </select>
         </div>
     </div>
+    <button type="button" class="gui-toggle-button" id="btnShowGui" title="Show Rain / Export panel if hidden">GUI</button>
     <div class="question-mark-button" id="questionMarkButton">?</div>
 
     <div class="info-box" id="infoBox">
@@ -387,7 +543,8 @@
             "imports": {
                 "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
                 "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/",
-                "gvp": "./gvp.js"
+                "gvp": "./gvp.js",
+                "tts-wasm": "./tts-wasm.js"
             }
         }
     </script>
@@ -406,7 +563,10 @@
             loadProjectFromIndexedDB,
             downloadJson,
             readJsonFile,
+            playTtsBuffer,
+            pickVideoMimeType,
         } from 'gvp';
+        import { synthesizeToAudioBuffer, loadTtsModel } from 'tts-wasm';
 
         let loadedFont = null;
 
@@ -473,6 +633,8 @@
             micGain: 1,
             videoMonitor: 1,
             micMonitor: 0,
+            ttsGain: 0.85,
+            ttsMonitor: 1,
         };
 
         let gvpMainGui = null;
@@ -636,24 +798,30 @@
         }
 
         embedVideo.addEventListener('loadeddata', buildVideoPlaneFromEmbed);
+        embedVideo.addEventListener('loadedmetadata', () => {
+            syncStudioTimelineUi();
+        });
 
         embedVideo.addEventListener('play', () => {
             simPaused = false;
             if (mixer) {
                 mixer.timeScale = 1;
             }
+            updateStudioPlayLabel();
         });
         embedVideo.addEventListener('pause', () => {
             simPaused = true;
             if (mixer) {
                 mixer.timeScale = 0;
             }
+            updateStudioPlayLabel();
         });
         embedVideo.addEventListener('ended', () => {
             simPaused = true;
             if (mixer) {
                 mixer.timeScale = 0;
             }
+            updateStudioPlayLabel();
         });
 
         function getMixerDelta() {
@@ -884,6 +1052,7 @@
 
             controls.update();
             renderer.render(scene, camera);
+            syncStudioTimelineUi();
         };
 
         function getTimelineNow() {
@@ -901,7 +1070,117 @@
         });
 
         const videoFileInput = document.getElementById('videoFileInput');
-        const exportDownload = document.getElementById('exportDownload');
+        const studioExportDownload = document.getElementById('studioExportDownload');
+        const studioMimeHint = document.getElementById('studioMimeHint');
+        const studioStatusEl = document.getElementById('studioStatus');
+        const studioScrubber = document.getElementById('studioScrubber');
+        const studioTimecode = document.getElementById('studioTimecode');
+        const studioDurationEl = document.getElementById('studioDuration');
+
+        let timelineScrubbing = false;
+        let activeTtsSources = [];
+        /** Fallback length (seconds) when no embedded video. */
+        let sessionTimelineLengthSec = 120;
+
+        function setStudioStatus(msg) {
+            if (studioStatusEl) {
+                studioStatusEl.textContent = msg;
+            }
+        }
+
+        function formatTime(sec) {
+            if (!Number.isFinite(sec) || sec < 0) {
+                return '0:00';
+            }
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function cueTime(c) {
+            if (typeof c.tStart === 'number') {
+                return c.tStart;
+            }
+            if (typeof c.t === 'number') {
+                return c.t;
+            }
+            return 0;
+        }
+
+        function getTimelineDurationSec() {
+            if (hasEmbeddedVideo && embedVideo.src && Number.isFinite(embedVideo.duration) && embedVideo.duration > 0) {
+                return embedVideo.duration;
+            }
+            const maxCue = commentaryCues.length
+                ? Math.max(...commentaryCues.map((c) => cueTime(c) + 2))
+                : 0;
+            return Math.max(sessionTimelineLengthSec, maxCue, timelineTime + 1, 30);
+        }
+
+        function syncStudioTimelineUi() {
+            const dur = getTimelineDurationSec();
+            const cur = getTimelineNow();
+            studioDurationEl.textContent = formatTime(dur);
+            studioTimecode.textContent = formatTime(cur);
+            if (!timelineScrubbing) {
+                studioScrubber.max = String(Math.max(0.01, dur));
+                studioScrubber.value = String(Math.min(cur, dur));
+            }
+        }
+
+        studioMimeHint.textContent = pickVideoMimeType() || 'video/webm (default)';
+
+        function updateStudioExportGate() {
+            const stStart = document.getElementById('studioStartExport');
+            if (!stStart) {
+                return;
+            }
+            const mimeOk = pickVideoMimeType() !== '';
+            const recording = exportController != null;
+            stStart.disabled = recording || !audioGraph || !mimeOk;
+        }
+
+        function refreshStudioIdleStatus() {
+            if (!pickVideoMimeType()) {
+                setStudioStatus('Recording unavailable (no WebM in this browser)');
+            } else if (audioGraph) {
+                setStudioStatus('Audio ready');
+            } else {
+                setStudioStatus('Ready');
+            }
+            updateStudioExportGate();
+        }
+
+        refreshStudioIdleStatus();
+
+        function seekTimelineTo(seconds) {
+            const dur = getTimelineDurationSec();
+            const t = Math.max(0, Math.min(seconds, dur));
+            if (hasEmbeddedVideo && embedVideo.src) {
+                embedVideo.currentTime = t;
+            } else {
+                timelineTime = t;
+            }
+            syncStudioTimelineUi();
+        }
+
+        studioScrubber.addEventListener('pointerdown', () => {
+            timelineScrubbing = true;
+        });
+        studioScrubber.addEventListener('pointerup', () => {
+            timelineScrubbing = false;
+            syncStudioTimelineUi();
+        });
+        studioScrubber.addEventListener('input', () => {
+            seekTimelineTo(parseFloat(studioScrubber.value, 10));
+        });
+
+        function updateStudioPlayLabel() {
+            const btn = document.getElementById('studioPlayPause');
+            if (btn) {
+                btn.textContent = simPaused ? 'Play' : 'Pause';
+            }
+        }
 
         videoFileInput.addEventListener('change', (e) => {
             const f = e.target.files && e.target.files[0];
@@ -920,10 +1199,12 @@
             audioGraph.gainMic.gain.value = gvpControls.micGain;
             audioGraph.gainVideoMonitor.gain.value = gvpControls.videoMonitor;
             audioGraph.gainMicMonitor.gain.value = gvpControls.micMonitor;
+            audioGraph.gainTTS.gain.value = gvpControls.ttsGain;
+            audioGraph.gainTTSMonitor.gain.value = gvpControls.ttsMonitor;
         }
 
         function refreshExportGuiDisplay() {
-            const ex = gvpMainGui && gvpMainGui.__folders && gvpMainGui.__folders.Export;
+            const ex = gvpMainGui && gvpMainGui.__folders && gvpMainGui.__folders['Mix levels'];
             if (!ex || !ex.__controllers) {
                 return;
             }
@@ -953,14 +1234,28 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) || '';
+            const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
             if (e.code === 'Space' && e.target === document.body) {
                 e.preventDefault();
                 togglePlayPause();
+                updateStudioPlayLabel();
+            }
+            if (!isTyping && e.target === document.body) {
+                if (e.code === 'ArrowLeft') {
+                    e.preventDefault();
+                    seekTimelineTo(getTimelineNow() - 1);
+                }
+                if (e.code === 'ArrowRight') {
+                    e.preventDefault();
+                    seekTimelineTo(getTimelineNow() + 1);
+                }
             }
         });
 
         async function doInitAudio() {
             try {
+                setStudioStatus('Requesting mic…');
                 if (!micStream) {
                     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 }
@@ -971,88 +1266,152 @@
                     audioGraph.setMicStream(micStream);
                 }
                 await audioGraph.context.resume();
+                refreshStudioIdleStatus();
             } catch (err) {
                 console.error(err);
+                setStudioStatus('Audio failed');
                 alert('Could not init audio (mic permission or Web Audio).');
+                updateStudioExportGate();
             }
         }
 
-        let exportGuiStopController = null;
-        let exportGuiStartController = null;
+        function setExportRecordingUi(isRecording) {
+            const stStop = document.getElementById('studioStopExport');
+            if (stStop) {
+                stStop.disabled = !isRecording;
+            }
+            updateStudioExportGate();
+        }
 
         async function doStartExport() {
             if (!audioGraph) {
-                alert('Use “Init audio” in Export first (mic + mix).');
+                setStudioStatus('Init audio first');
+                alert('Use “Init audio” first (mic + mix).');
                 return;
             }
+            activeTtsSources.forEach((s) => {
+                try {
+                    s.stop(0);
+                } catch (_e) {}
+            });
+            activeTtsSources = [];
             try {
+                setStudioStatus('Preparing export…');
                 await audioGraph.context.resume();
+                const ttsCues = commentaryCues
+                    .filter((c) => (c.kind || 'tts') !== 'mic')
+                    .map((c) => ({
+                        tStart: cueTime(c),
+                        text: String(c.text || c.note || '').trim(),
+                    }))
+                    .filter((c) => c.text.length > 0);
+                const schedule = [];
+                let i = 0;
+                for (const c of ttsCues) {
+                    i += 1;
+                    setStudioStatus(`TTS ${i}/${ttsCues.length}…`);
+                    const buf = await synthesizeToAudioBuffer(audioGraph.context, c.text, (p) => {
+                        if (p.status === 'progress' && p.progress != null) {
+                            setStudioStatus(`Model file ${Math.round(100 * p.progress)}%`);
+                        }
+                    });
+                    schedule.push({ tStart: c.tStart, buffer: buf });
+                }
+                seekTimelineTo(0);
+                simPaused = false;
+                if (mixer) {
+                    mixer.timeScale = 1;
+                }
+                if (hasEmbeddedVideo && embedVideo.src) {
+                    embedVideo.currentTime = 0;
+                    await embedVideo.play();
+                }
+                updateStudioPlayLabel();
+                const t0 = audioGraph.context.currentTime;
+                for (const { tStart, buffer } of schedule) {
+                    const src = audioGraph.context.createBufferSource();
+                    src.buffer = buffer;
+                    src.connect(audioGraph.gainTTS);
+                    src.start(t0 + Math.max(0, tStart));
+                    activeTtsSources.push(src);
+                }
                 exportController = startCanvasExport(renderer.domElement, audioGraph.destination.stream, {
                     fps: 30,
                     videoBitsPerSecond: 2_500_000,
                 });
-                if (exportGuiStopController) {
-                    exportGuiStopController.domElement.style.pointerEvents = '';
-                    exportGuiStopController.domElement.style.opacity = '1';
-                }
-                if (exportGuiStartController) {
-                    exportGuiStartController.domElement.style.pointerEvents = 'none';
-                    exportGuiStartController.domElement.style.opacity = '0.5';
-                }
+                setExportRecordingUi(true);
+                setStudioStatus('Recording…');
             } catch (err) {
                 console.error(err);
-                alert('Export failed to start.');
+                activeTtsSources.forEach((s) => {
+                    try {
+                        s.stop(0);
+                    } catch (_e) {}
+                });
+                activeTtsSources = [];
+                if (hasEmbeddedVideo && embedVideo.src) {
+                    try {
+                        embedVideo.pause();
+                    } catch (_e) {}
+                }
+                simPaused = true;
+                if (mixer) {
+                    mixer.timeScale = 0;
+                }
+                updateStudioPlayLabel();
+                setExportRecordingUi(false);
+                setStudioStatus('Export failed');
+                alert(err.message || String(err));
             }
         }
 
         async function doStopExport() {
+            activeTtsSources.forEach((s) => {
+                try {
+                    s.stop(0);
+                } catch (_e) {}
+            });
+            activeTtsSources = [];
+            if (hasEmbeddedVideo && embedVideo.src) {
+                embedVideo.pause();
+            }
+            simPaused = true;
+            if (mixer) {
+                mixer.timeScale = 0;
+            }
+            updateStudioPlayLabel();
             if (!exportController) {
+                setExportRecordingUi(false);
+                refreshStudioIdleStatus();
                 return;
             }
+            let finalizeOk = false;
             try {
+                setStudioStatus('Finalizing…');
                 const blob = await exportController.stop();
                 const url = URL.createObjectURL(blob);
-                exportDownload.href = url;
-                exportDownload.classList.add('is-ready');
+                studioExportDownload.href = url;
+                studioExportDownload.classList.add('is-ready');
+                finalizeOk = true;
             } catch (err) {
                 console.error(err);
+                setStudioStatus('Finalize failed');
                 alert('Export stop failed.');
             }
             exportController = null;
-            if (exportGuiStopController) {
-                exportGuiStopController.domElement.style.pointerEvents = 'none';
-                exportGuiStopController.domElement.style.opacity = '0.5';
-            }
-            if (exportGuiStartController) {
-                exportGuiStartController.domElement.style.pointerEvents = '';
-                exportGuiStartController.domElement.style.opacity = '1';
+            setExportRecordingUi(false);
+            if (finalizeOk) {
+                refreshStudioIdleStatus();
+            } else {
+                updateStudioExportGate();
             }
         }
 
         const gvpExportActions = {
-            pickVideoFile() {
-                videoFileInput.click();
-            },
-            clearVideo() {
-                clearEmbeddedVideo();
-                timelineTime = 0;
-            },
             togglePlane() {
                 if (videoPlane) {
                     videoPlane.visible = !videoPlane.visible;
                 }
-            },
-            togglePause() {
-                togglePlayPause();
-            },
-            initAudio() {
-                doInitAudio();
-            },
-            startExport() {
-                doStartExport();
-            },
-            stopExport() {
-                doStopExport();
             },
         };
 
@@ -1060,30 +1419,65 @@
             if (!gvpMainGui) {
                 return;
             }
-            const ex = gvpMainGui.addFolder('Export');
-            ex.add(gvpExportActions, 'pickVideoFile').name('Load embedded video');
-            ex.add(gvpExportActions, 'clearVideo').name('Clear video');
+            const ex = gvpMainGui.addFolder('Mix levels');
+            ex.add(gvpControls, 'videoGain', 0, 1, 0.01).name('Video → record').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'micGain', 0, 2, 0.01).name('Mic → record').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'videoMonitor', 0, 1, 0.01).name('Hear embedded').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'micMonitor', 0, 1, 0.01).name('Hear mic').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'ttsGain', 0, 2, 0.01).name('WASM TTS → record').onChange(syncAudioFromControls);
+            ex.add(gvpControls, 'ttsMonitor', 0, 1, 0.01).name('Hear WASM TTS').onChange(syncAudioFromControls);
             ex.add(gvpExportActions, 'togglePlane').name('Toggle video plane');
-            ex.add(gvpExportActions, 'togglePause').name('Toggle pause (Space)');
-            ex.add(gvpExportActions, 'initAudio').name('Init audio (mic + mix)');
-            ex.add(gvpControls, 'videoGain', 0, 1, 0.01).name('Video → recording').onChange(syncAudioFromControls);
-            ex.add(gvpControls, 'micGain', 0, 2, 0.01).name('Mic → recording').onChange(syncAudioFromControls);
-            ex.add(gvpControls, 'videoMonitor', 0, 1, 0.01)
-                .name('Hear embedded (speakers)')
-                .onChange(syncAudioFromControls);
-            ex.add(gvpControls, 'micMonitor', 0, 1, 0.01)
-                .name('Hear mic (use 0 if echo)')
-                .onChange(syncAudioFromControls);
-            exportGuiStartController = ex.add(gvpExportActions, 'startExport').name('Start WebM export');
-            exportGuiStopController = ex.add(gvpExportActions, 'stopExport').name('Stop export');
-            if (exportGuiStopController) {
-                exportGuiStopController.domElement.style.pointerEvents = 'none';
-                exportGuiStopController.domElement.style.opacity = '0.5';
-            }
             ex.open();
         }
 
         initExportGuiFolder();
+
+        document.getElementById('studioLoadVideo').addEventListener('click', () => {
+            videoFileInput.click();
+        });
+        document.getElementById('studioClearVideo').addEventListener('click', () => {
+            clearEmbeddedVideo();
+            timelineTime = 0;
+            syncStudioTimelineUi();
+        });
+        document.getElementById('studioInitAudio').addEventListener('click', () => {
+            doInitAudio();
+        });
+        document.getElementById('studioStartExport').addEventListener('click', () => {
+            doStartExport();
+        });
+        document.getElementById('studioStopExport').addEventListener('click', () => {
+            doStopExport();
+        });
+        document.getElementById('studioPlayPause').addEventListener('click', async () => {
+            await togglePlayPause();
+            updateStudioPlayLabel();
+        });
+
+        function ensureDatGuiVisible() {
+            if (!gvpMainGui || !gvpMainGui.domElement) {
+                return;
+            }
+            gvpMainGui.closed = false;
+            gvpMainGui.domElement.style.display = 'block';
+            gvpMainGui.domElement.style.visibility = 'visible';
+            gvpMainGui.domElement.style.opacity = '1';
+            const dgMain = gvpMainGui.domElement.querySelector('.dg.main');
+            if (dgMain) {
+                dgMain.style.display = '';
+                dgMain.style.visibility = 'visible';
+            }
+        }
+
+        document.getElementById('btnShowGui').addEventListener('click', () => {
+            ensureDatGuiVisible();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.code === 'KeyG') {
+                e.preventDefault();
+                ensureDatGuiVisible();
+            }
+        });
 
         function populateTtsVoices() {
             const sel = document.getElementById('ttsVoice');
@@ -1100,12 +1494,24 @@
         speechSynthesis.onvoiceschanged = populateTtsVoices;
         populateTtsVoices();
 
-        document.getElementById('btnTtsPreview').addEventListener('click', () => {
+        document.getElementById('btnTtsPreview').addEventListener('click', async () => {
             const text = document.getElementById('ttsText').value;
-            if (!text.trim()) return;
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            let voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                await new Promise((r) => setTimeout(r, 250));
+                voices = speechSynthesis.getVoices();
+            }
+            if (voices.length === 0) {
+                return;
+            }
+            const sel = document.getElementById('ttsVoice');
+            if (sel.options.length === 0) {
+                populateTtsVoices();
+            }
             const u = new SpeechSynthesisUtterance(text);
-            const voices = speechSynthesis.getVoices();
-            const vi = parseInt(document.getElementById('ttsVoice').value, 10);
+            const vi = parseInt(sel.value, 10);
             if (voices[vi]) {
                 u.voice = voices[vi];
             }
@@ -1115,20 +1521,55 @@
             speechSynthesis.speak(u);
         });
 
+        document.getElementById('btnTtsWasmPreview').addEventListener('click', async () => {
+            const trimmed = document.getElementById('ttsText').value.trim();
+            if (!trimmed) {
+                return;
+            }
+            if (!audioGraph) {
+                setStudioStatus('Init audio first');
+                alert('Use “Init audio” first to hear WASM TTS in the mix.');
+                return;
+            }
+            try {
+                setStudioStatus('WASM TTS…');
+                await audioGraph.context.resume();
+                const buf = await synthesizeToAudioBuffer(audioGraph.context, trimmed, (p) => {
+                    if (p && p.status === 'progress' && p.progress != null) {
+                        setStudioStatus(`Model file ${Math.round(100 * p.progress)}%`);
+                    }
+                });
+                playTtsBuffer(audioGraph, buf, 0);
+                setStudioStatus('Ready');
+            } catch (err) {
+                console.error(err);
+                setStudioStatus('TTS error');
+                alert(err.message || String(err));
+            }
+        });
+
         function renderCueList() {
             const el = document.getElementById('cueList');
-            el.innerHTML = commentaryCues
-                .map(
-                    (c, i) =>
-                        `${i + 1}. t=${c.t.toFixed(2)}s — ${c.note || ''}`
-                )
-                .join('<br>');
+            el.replaceChildren();
+            commentaryCues.forEach((c, i) => {
+                const row = document.createElement('div');
+                const kind = c.kind || 'tts';
+                const line = String(c.text || c.note || '').trim() || '(empty)';
+                row.textContent = `${i + 1}. t=${cueTime(c).toFixed(2)}s [${kind}] — ${line}`;
+                el.appendChild(row);
+            });
         }
 
         document.getElementById('btnAddCue').addEventListener('click', () => {
+            const raw = document.getElementById('ttsText').value.trim();
             commentaryCues.push({
-                t: getTimelineNow(),
-                note: 'cue',
+                id:
+                    typeof crypto !== 'undefined' && crypto.randomUUID
+                        ? crypto.randomUUID()
+                        : String(Date.now()),
+                tStart: getTimelineNow(),
+                text: raw || 'cue',
+                kind: 'tts',
             });
             renderCueList();
         });
@@ -1149,7 +1590,7 @@
                 videoFileName = embedVideo.dataset.fileName || 'embedded.mp4';
             }
             return {
-                version: 1,
+                version: 2,
                 savedAt: Date.now(),
                 clearColor: settings.clearColor,
                 selectedCharacterId,
@@ -1163,6 +1604,8 @@
                 gainMic: gvpControls.micGain,
                 gainVideoMonitor: gvpControls.videoMonitor,
                 gainMicMonitor: gvpControls.micMonitor,
+                gainTts: gvpControls.ttsGain,
+                gainTtsMonitor: gvpControls.ttsMonitor,
                 commentaryCues: commentaryCues.map((c) => ({ ...c })),
                 videoFileName,
                 embedVideoArrayBuffer,
@@ -1178,10 +1621,28 @@
             }
         }
 
+        function migrateCue(c) {
+            if (c.tStart != null || c.text != null) {
+                return {
+                    id: c.id || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+                    tStart: typeof c.tStart === 'number' ? c.tStart : cueTime(c),
+                    text: c.text != null ? c.text : String(c.note || ''),
+                    kind: c.kind || 'tts',
+                };
+            }
+            return {
+                id: c.id || String(Date.now()),
+                tStart: typeof c.t === 'number' ? c.t : 0,
+                text: String(c.note || ''),
+                kind: 'tts',
+            };
+        }
+
         async function applyProject(data) {
-            if (!data || data.version !== 1) {
+            if (!data || (data.version !== 1 && data.version !== 2)) {
+                setStudioStatus('Project file unsupported');
                 alert('Unsupported project file.');
-                return;
+                return false;
             }
             settings.clearColor = data.clearColor || settings.clearColor;
             bgColorPicker.value = settings.clearColor;
@@ -1198,10 +1659,12 @@
             gvpControls.micGain = data.gainMic ?? 1;
             gvpControls.videoMonitor = data.gainVideoMonitor ?? 1;
             gvpControls.micMonitor = data.gainMicMonitor ?? 0;
+            gvpControls.ttsGain = data.gainTts ?? 0.85;
+            gvpControls.ttsMonitor = data.gainTtsMonitor ?? 1;
             refreshExportGuiDisplay();
             syncAudioFromControls();
             commentaryCues.length = 0;
-            (data.commentaryCues || []).forEach((c) => commentaryCues.push({ ...c }));
+            (data.commentaryCues || []).forEach((c) => commentaryCues.push(migrateCue(c)));
             renderCueList();
             clearEmbeddedVideo();
             if (data.embedVideoArrayBuffer && data.embedVideoArrayBuffer.byteLength) {
@@ -1215,15 +1678,18 @@
                 scene.add(stickman);
                 await loadCharacterModel(characterById[data.selectedCharacterId], animations);
             }
+            return true;
         }
 
         document.getElementById('btnSaveProject').addEventListener('click', async () => {
             try {
                 const payload = await buildProjectPayload();
                 await saveProjectToIndexedDB(PROJECT_ID, payload);
+                setStudioStatus('Project saved in browser');
                 alert('Project saved in this browser.');
             } catch (e) {
                 console.error(e);
+                setStudioStatus('Project save failed');
                 alert('Save failed.');
             }
         });
@@ -1232,12 +1698,16 @@
             try {
                 const data = await loadProjectFromIndexedDB(PROJECT_ID);
                 if (!data) {
+                    setStudioStatus('No saved project');
                     alert('No saved project found.');
                     return;
                 }
-                await applyProject(data);
+                if (await applyProject(data)) {
+                    setStudioStatus('Project loaded');
+                }
             } catch (e) {
                 console.error(e);
+                setStudioStatus('Project load failed');
                 alert('Load failed.');
             }
         });
@@ -1253,8 +1723,10 @@
                             ? 'Embedded video is not included in JSON (size). Use “Save to browser” for full fidelity, or re-attach the video file after loading this JSON.'
                             : null,
                 });
+                setStudioStatus('Project JSON downloaded');
             } catch (e) {
                 console.error(e);
+                setStudioStatus('Project download failed');
                 alert('Download failed.');
             }
         });
@@ -1269,9 +1741,12 @@
             if (!f) return;
             try {
                 const raw = await readJsonFile(f);
-                await applyProject(raw);
+                if (await applyProject(raw)) {
+                    setStudioStatus('Project loaded');
+                }
             } catch (err) {
                 console.error(err);
+                setStudioStatus('Invalid project JSON');
                 alert('Invalid project JSON.');
             }
             projectFileInput.value = '';

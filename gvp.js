@@ -1,5 +1,6 @@
 /**
  * GVP: Web Audio mix bus, WebM export, IndexedDB project persistence.
+ * Manual browser checks: see TESTING.md. Automated: `npm test` (pickVideoMimeType).
  */
 
 const DB_NAME = 'gvp-projects';
@@ -70,12 +71,22 @@ export function createAudioGraph(videoEl, micStream) {
 
     setMicStream(micStream);
 
+    const gainTTS = ctx.createGain();
+    const gainTTSMonitor = ctx.createGain();
+    gainTTS.gain.value = 0.85;
+    gainTTSMonitor.gain.value = 1;
+    gainTTS.connect(dest);
+    gainTTS.connect(gainTTSMonitor);
+    gainTTSMonitor.connect(ctx.destination);
+
     return {
         context: ctx,
         gainVideo,
         gainVideoMonitor,
         gainMic,
         gainMicMonitor,
+        gainTTS,
+        gainTTSMonitor,
         destination: dest,
         /** @param {MediaStream} stream */
         setMicStream,
@@ -85,6 +96,23 @@ export function createAudioGraph(videoEl, micStream) {
             } catch (_) {}
         },
     };
+}
+
+/**
+ * Play decoded TTS through the mix bus (recording + optional monitor).
+ * @param {ReturnType<typeof createAudioGraph>} audioGraph
+ * @param {AudioBuffer} audioBuffer
+ * @param {number} whenSecondsFromNow relative to audioContext.currentTime
+ * @returns {AudioBufferSourceNode}
+ */
+export function playTtsBuffer(audioGraph, audioBuffer, whenSecondsFromNow = 0) {
+    const ctx = audioGraph.context;
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuffer;
+    src.connect(audioGraph.gainTTS);
+    const t = ctx.currentTime + Math.max(0, whenSecondsFromNow);
+    src.start(t);
+    return src;
 }
 
 /**

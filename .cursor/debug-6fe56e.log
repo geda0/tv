@@ -1,0 +1,16 @@
+{"sessionId":"6fe56e","location":"index.html:gui","message":"datGUI after export init","data":{"closed":false,"display":"block","zIndex":"auto"},"timestamp":1776636848823,"hypothesisId":"GUI-H1"}
+{"sessionId":"6fe56e","location":"index.html:tts-voices","message":"populateTtsVoices","data":{"count":0},"timestamp":1776636848823,"hypothesisId":"TTS-H1"}
+{"sessionId":"6fe56e","location":"index.html:gui-mutation","message":"datGUI dom mutation","data":{"closed":false,"display":"block","opacity":"1"},"timestamp":1776636848887,"hypothesisId":"GUI-H2"}
+{"sessionId":"6fe56e","location":"index.html:tts-voices","message":"populateTtsVoices","data":{"count":210},"timestamp":1776636848889,"hypothesisId":"TTS-H1"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636867346,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-mutation","message":"datGUI dom mutation","data":{"closed":false,"display":"block","opacity":"1"},"timestamp":1776636867347,"hypothesisId":"GUI-H2"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636867963,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636870113,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636876096,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636876613,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636876824,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui-show","message":"ensureDatGuiVisible","data":{"closed":false,"display":"block","runId":"post-fix"},"timestamp":1776636876987,"hypothesisId":"GUI-fix"}
+{"sessionId":"6fe56e","location":"index.html:gui","message":"datGUI after export init","data":{"closed":false,"display":"block","zIndex":"auto"},"timestamp":1776637720890,"hypothesisId":"GUI-H1"}
+{"sessionId":"6fe56e","location":"index.html:tts-voices","message":"populateTtsVoices","data":{"count":0},"timestamp":1776637720891,"hypothesisId":"TTS-H1"}
+{"sessionId":"6fe56e","location":"index.html:gui-mutation","message":"datGUI dom mutation","data":{"closed":false,"display":"block","opacity":"1"},"timestamp":1776637720988,"hypothesisId":"GUI-H2"}
+{"sessionId":"6fe56e","location":"index.html:tts-voices","message":"populateTtsVoices","data":{"count":210},"timestamp":1776637720992,"hypothesisId":"TTS-H1"}
