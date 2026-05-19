@@ -15,30 +15,6 @@
             display: block;
         }
 
-        #model-selection {
-            position: fixed;
-            top: 70px;
-            left: 0;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #model-selection h4 {
-            color: white;
-        }
-
-        .model-button {
-            padding: 10px 20px;
-            background-color: white;
-            border: 1px solid black;
-            border-radius: 5px;
-            margin: 10px;
-            cursor: pointer;
-        }
-
         #hud {
             position: fixed;
             top: 10px;
@@ -173,30 +149,19 @@
             display: inline;
         }
 
-        #startButton {
-            height: 50px;
+        .studio-name {
+            background: #1f1f24;
+            color: #eee;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 5px 8px;
+            font: 12px system-ui, 'Segoe UI', sans-serif;
+            width: 140px;
         }
 
-        #startButton,
-        #recordButton,
-        #stopRecordingButton {
-            width: 100px;
-            position: absolute;
-            top: 0;
-            left: calc(50% - 50px);
-            z-index: 100;
-        }
-
-        #recordButton,
-        #stopRecordingButton {
-            height: 34px;
-        }
-
-        #tracksContainer {
-            position: absolute;
-            bottom: 114px;
-            right: 10px;
-            z-index: 100;
+        .studio-name:focus {
+            outline: 1px solid #6ad;
+            outline-offset: 1px;
         }
 
         .gui-toggle-button {
@@ -296,8 +261,8 @@
             position: fixed;
             left: 10px;
             bottom: 172px;
-            width: 245px;
-            max-height: min(42vh, 380px);
+            width: 260px;
+            max-height: min(70vh, 620px);
             overflow-x: hidden;
             overflow-y: auto;
             background: #1a1a1a;
@@ -378,7 +343,7 @@
         }
 
         .dg-style-panel #cueList {
-            max-height: 100px;
+            max-height: 140px;
             overflow-y: auto;
             background: #111;
             padding: 6px;
@@ -386,6 +351,87 @@
             margin-top: 4px;
             font-size: 10px;
             color: #ccc;
+        }
+
+        .dg-style-panel .cue-row {
+            display: grid;
+            grid-template-columns: 52px 1fr auto auto;
+            gap: 4px;
+            align-items: center;
+            padding: 3px 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .dg-style-panel .cue-row:last-child {
+            border-bottom: none;
+        }
+
+        .dg-style-panel .cue-row input[type="number"],
+        .dg-style-panel .cue-row input[type="text"] {
+            background: #303030;
+            color: #e8e8e8;
+            border: 1px solid #444;
+            font: 10px 'Lucida Grande', Helvetica, Verdana, sans-serif;
+            padding: 2px 4px;
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .dg-style-panel .cue-row button {
+            width: auto;
+            margin-top: 0;
+            background: #303030;
+            color: #e8e8e8;
+            border: 1px solid #555;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        .dg-style-panel .cue-row button:hover:not(:disabled) {
+            background: #3a3a3a;
+        }
+
+        .dg-style-panel .char-btn.is-active {
+            background: #2d6a4f;
+            border-color: #1b4332;
+            color: #fff;
+        }
+
+        .dg-style-panel .anim-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .dg-style-panel .anim-btn {
+            flex: 1 0 auto;
+            min-width: 64px;
+            margin-top: 0;
+            background: #303030;
+            color: #e8e8e8;
+            border: 1px solid #555;
+            padding: 4px 6px;
+            cursor: pointer;
+        }
+
+        .dg-style-panel .anim-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .dg-style-panel .anim-btn.is-active {
+            background: #2d6a4f;
+            border-color: #1b4332;
+            color: #fff;
+        }
+
+        #btnVoiceToggle.is-on {
+            background: #6a1c2b;
+            border-color: #4a1520;
+            color: #fff;
         }
 
         #embedVideo {
@@ -403,18 +449,6 @@
 </head>
 
 <body>
-    <div id="model-selection">
-        <h4>Deploy</h4>
-        <button id="model-1" class="model-button">Glasses</button>
-        <button id="model-2" class="model-button">Aj</button>
-        <button id="model-3" class="model-button">Remy</button>
-        <button id="model-4" class="model-button">pmm</button>
-    </div>
-    <button id="startButton">Start!</button>
-    <button id="recordButton" style="display:none;">Record</button>
-    <button id="stopRecordingButton" style="display:none;">Stop Recording</button>
-    <div id="tracksContainer"></div>
-
     <video id="embedVideo" playsinline crossorigin="anonymous"></video>
     <input type="file" id="videoFileInput" accept="video/*" style="display:none" />
 
@@ -431,73 +465,81 @@
             <span>/</span>
             <span class="studio-time" id="studioDuration">0:00</span>
             <input type="range" id="studioScrubber" min="0" max="100" step="0.05" value="0" title="Seek timeline" />
-            <span id="studioStatus" class="studio-status">Ready</span>
+            <span id="studioStatus" class="studio-status" role="status" aria-live="polite">Ready</span>
         </div>
         <div class="studio-row">
             <button type="button" id="studioLoadVideo">Load video</button>
             <button type="button" id="studioClearVideo">Clear video</button>
             <button type="button" class="studio-primary" id="studioInitAudio">Init audio</button>
+            <input type="text" id="studioExportName" class="studio-name" value="gvp-export" maxlength="64" title="Export filename (without extension)" />
             <button type="button" class="studio-primary" id="studioStartExport" disabled>Start export</button>
             <button type="button" class="studio-danger" id="studioStopExport" disabled>Stop export</button>
             <a id="studioExportDownload" class="studio-dl" href="#" download="gvp-export.webm">Download WebM</a>
             <span id="studioMimeHint" class="studio-mime"></span>
         </div>
         <p id="studioStepsHint" class="studio-steps">
-            1 Load video (optional) · 2 Init audio · 3 Add WASM TTS cues in the panel · 4 Start export · Download WebM here.
-            Export captures the 3D canvas plus mixed audio; keep this tab focused while recording.
+            1 Pick a character (panel) · 2 Load video (optional) · 3 Init audio · 4 Add TTS or voice cues · 5 Start export.
+            Export captures the 3D canvas + mixed audio; keep this tab focused while recording.
         </p>
     </div>
 
     <div id="gvp-panel" class="dg-style-panel">
-        <h4>WASM TTS (export)</h4>
-        <p class="hint">
-            Cues use Transformers.js in the browser; first run downloads the voice model. Add lines below, then use
-            <strong>Start export</strong> in the studio bar (timeline resets to 0).
-        </p>
-        <textarea id="ttsText" placeholder="Line for new cues / WASM preview…"></textarea>
+        <h4>Character</h4>
+        <p class="hint">Pick a model. Switching releases the previous one. Animations below trigger after load.</p>
+        <div class="row" id="characterRow">
+            <button type="button" class="char-btn" data-char="m1">Glasses</button>
+            <button type="button" class="char-btn" data-char="m2">Aj</button>
+        </div>
         <div class="row">
-            <button type="button" id="btnTtsWasmPreview">Preview WASM</button>
+            <button type="button" class="char-btn" data-char="m3">Remy</button>
+            <button type="button" class="char-btn" data-char="m4">pmm</button>
+        </div>
+        <p class="hint" id="characterStatus">No character loaded.</p>
+        <div id="animationList" class="anim-list"></div>
+
+        <h4>Voice cues</h4>
+        <p class="hint" id="voiceHint">
+            Toggle to capture speech. Words that match keywords (run, jump, dance, …) trigger the active character.
+            Each phrase also becomes a commentary cue at the current timeline time.
+        </p>
+        <div class="row">
+            <button type="button" id="btnVoiceToggle">Voice cues: off</button>
         </div>
 
-        <h4>Web Speech (optional)</h4>
-        <p class="hint">Browser speech preview only — not mixed into WebM. Use for quick line reads.</p>
-        <label>Rate / Pitch</label>
+        <h4>TTS</h4>
+        <p class="hint">
+            WASM TTS via Transformers.js. First preview downloads the voice model. Cues are mixed into the export.
+        </p>
+        <textarea id="ttsText" placeholder="Line for new cues / preview…"></textarea>
         <div class="row">
-            <input type="range" id="ttsRate" min="0.5" max="2" step="0.05" value="1" style="flex:1" />
-            <input type="range" id="ttsPitch" min="0" max="2" step="0.05" value="1" style="flex:1" />
-        </div>
-        <label>Voice</label>
-        <select id="ttsVoice"></select>
-        <div class="row">
-            <button type="button" id="btnTtsPreview">Preview Web Speech</button>
+            <button type="button" id="btnTtsWasmPreview">Preview</button>
+            <button type="button" id="btnAddCue">Add cue</button>
         </div>
 
         <h4>Commentary cues</h4>
-        <p class="hint">Add cue = text in the box + current timeline time. Init audio before WASM preview.</p>
         <div class="row">
-            <button type="button" id="btnAddCue">Add cue</button>
             <button type="button" id="btnClearCues">Clear all</button>
         </div>
         <div id="cueList"></div>
 
         <h4>Project</h4>
         <div class="row">
-            <button type="button" id="btnSaveProject">Save to browser</button>
-            <button type="button" id="btnLoadProject">Load from browser</button>
+            <button type="button" id="btnSaveProject">Save</button>
+            <button type="button" id="btnLoadProject">Load</button>
+            <button type="button" id="btnResetProject">Reset</button>
         </div>
         <div class="row">
-            <button type="button" id="btnDownloadProject">Download JSON</button>
-            <button type="button" id="btnPickProject">Load JSON file</button>
+            <button type="button" id="btnDownloadProject">Export JSON</button>
+            <button type="button" id="btnPickProject">Import JSON</button>
         </div>
         <input type="file" id="projectFileInput" accept="application/json,.json" style="display:none" />
-        <p class="hint" style="margin-top: 8px">Exported WebM: use <strong>Download WebM</strong> in the studio bar.</p>
     </div>
 
     <div id="hud">
+        <label for="bgColorPicker" class="color-picker">Background</label>
         <input type="color" id="bgColorPicker" class="color-picker" value="#119911">
-        <label for="bgColorPicker" class="color-picker">♧</label>
         <div id="languageSelector">
-            <label for="language">Language:</label>
+            <label for="language">Voice lang:</label>
             <select id="language">
                 <option value="en-US">English</option>
                 <option value="es-ES">Spanish</option>
@@ -511,27 +553,24 @@
     <button type="button" class="gui-toggle-button" id="btnShowGui" title="Show Rain / Export panel if hidden">GUI</button>
     <div class="question-mark-button" id="questionMarkButton">?</div>
 
-    <div class="info-box" id="infoBox">
-        <h3>Generative Video Platform -under construction-</h3>
+    <div class="info-box" id="infoBox" role="dialog" aria-labelledby="infoBoxTitle">
+        <h3 id="infoBoxTitle">Generative Video Platform</h3>
         <p>
-            Generative Video Platform ©, Is a platform for creators.
-            Based on Thought Visualizer Technology ©.
-            <br />
-            While the platform is under construction still, The deployed characters will "run" "jump" "dance" or "stop"
-            if you ask them to.
-            <br />
-            1. Click Start!
-            <br />
-            2. Deploy a character
-            <br />
-            3. Click Record to make tracks (optional)
-            <br />
-            Note: Speech recognition is 100% on your device.
-
+            A browser-only creator studio: pick a 3D character, drop in a video, add TTS or voice-triggered
+            cues, then record the canvas + mixed audio to a WebM file.
         </p>
-        <span class="closeer-button" id="closeButton">&times;</span>
+        <ol style="text-align:left; padding-left: 1.2em; margin: 8px 0;">
+            <li>Pick a <strong>character</strong> in the left panel.</li>
+            <li>Optionally <strong>Load video</strong> in the studio bar.</li>
+            <li>Click <strong>Init audio</strong> (grants mic + starts the mix).</li>
+            <li>Add <strong>TTS</strong> cues or toggle <strong>Voice cues</strong> to capture speech.</li>
+            <li><strong>Start export</strong>, then <strong>Stop export</strong>, then <strong>Download WebM</strong>.</li>
+        </ol>
+        <p style="font-size: 12px; color: #c0c0c0;">
+            All processing is on-device. The TTS model downloads once on first use.
+        </p>
+        <span class="closeer-button" id="closeButton" role="button" aria-label="Close">&times;</span>
         <button id="close-info-box">OK</button>
-
     </div>
 
 
@@ -625,12 +664,7 @@
         const loader = new FBXLoader();
         let mixer;
         let character;
-        let stickmanArmAngle = 0;
-        let stickmanLegAngle = 0;
-        const stickmanArmSpeed = 0.1;
-        const stickmanLegSpeed = 0.15;
-        const stickmanArmAmplitude = 0.5;
-        const stickmanLegAmplitude = 0.5;
+        let characterLoadGen = 0;
 
         let rainInstancedMesh = null;
         let rainPx = null;
@@ -746,7 +780,6 @@
         const commentaryCues = [];
         let selectedCharacterId = null;
         let canvasWords = [];
-        let recognizedWords = [];
 
         function layoutVideoPlane() {
             if (!videoPlane || !embedVideo.videoWidth) return;
@@ -857,99 +890,27 @@
             return simPaused ? 0 : d;
         }
 
-        function createStickman() {
-            const stickmanMaterial = new THREE.MeshBasicMaterial({ color: 0x991199 });
-            const head = new THREE.Mesh(new THREE.SphereGeometry(10), stickmanMaterial);
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40), stickmanMaterial);
-            const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40), stickmanMaterial);
-            const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40), stickmanMaterial);
-            const arm1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40), stickmanMaterial);
-            const arm2 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 40), stickmanMaterial);
-            head.position.y = 60;
-            body.position.y = 30;
-            leg1.position.set(0, 0, 10);
-            leg2.position.set(0, 0, -10);
-            arm1.position.set(0, 30, 20);
-            arm2.position.set(0, 30, -20);
-            leg1.rotation.x = Math.PI / 2;
-            leg2.rotation.x = Math.PI / 2;
-            arm1.rotation.z = Math.PI / 2;
-            arm2.rotation.z = Math.PI / 2;
-
-            const stickman = new THREE.Group();
-            stickman.add(head);
-            stickman.add(body);
-            stickman.add(leg1);
-            stickman.add(leg2);
-            stickman.add(arm1);
-            stickman.add(arm2);
-
-            return stickman;
-        }
-
         function updateCharacter(delta) {
             if (mixer) {
                 mixer.update(delta);
             }
         }
 
-        const model1Button = document.getElementById('model-1');
-        const model2Button = document.getElementById('model-2');
-        const model3Button = document.getElementById('model-3');
-        const model4Button = document.getElementById('model-4');
-        const modelSelection = document.getElementById('model-selection');
-
-        const stickman = createStickman();
-        // Update model buttons event listeners
         const characterById = {
-            m1: 'models/Ch03_nonPBR.fbx',
-            m2: 'models/Aj.fbx',
-            m3: 'models/Remy.fbx',
-            m4: 'models/passive_marker_man.fbx',
+            m1: { path: 'models/Ch03_nonPBR.fbx', label: 'Glasses' },
+            m2: { path: 'models/Aj.fbx', label: 'Aj' },
+            m3: { path: 'models/Remy.fbx', label: 'Remy' },
+            m4: { path: 'models/passive_marker_man.fbx', label: 'pmm' },
         };
 
-        model1Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            selectedCharacterId = 'm1';
-            await loadCharacterModel(characterById.m1, animations);
-        });
+        const animationList = [
+            { file: '2run.fbx', label: 'Run' },
+            { file: 'Jumping.fbx', label: 'Jump' },
+            { file: 'Breakdance.fbx', label: 'Dance' },
+            { file: 'Cartwheel.fbx', label: 'Cartwheel' },
+            { file: 'Capoeira.fbx', label: 'Capoeira' },
+        ];
 
-        model2Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            selectedCharacterId = 'm2';
-            await loadCharacterModel(characterById.m2, animations);
-        });
-
-        model3Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            selectedCharacterId = 'm3';
-            await loadCharacterModel(characterById.m3, animations);
-        });
-
-
-        model4Button.addEventListener('click', async () => {
-            modelSelection.style.display = 'none';
-            scene.add(stickman);
-            selectedCharacterId = 'm4';
-            await loadCharacterModel(characterById.m4, animations);
-        });
-
-        function animateStickman() {
-            stickmanArmAngle += stickmanArmSpeed;
-            stickmanLegAngle += stickmanLegSpeed;
-            stickman.children[4].rotation.x = Math.sin(stickmanArmAngle) * 0.5; // Left arm
-            stickman.children[5].rotation.x = -Math.sin(stickmanArmAngle) * 0.5; // Right arm
-
-            stickman.children[2].rotation.z = Math.sin(stickmanLegAngle) * 0.5; // Left leg
-            stickman.children[3].rotation.z = -Math.sin(stickmanLegAngle) * 0.5; // Right leg
-        }
-
-
-        // Add the animation files to an array
-        const animations = ['2run.fbx', 'Jumping.fbx', 'Breakdance.fbx', 'Cartwheel.fbx', 'Capoeira.fbx'];
         const animationKeywords = [
             { keyword: 'run', index: 0 },
             { keyword: 'walk', index: 0 },
@@ -963,49 +924,96 @@
             { keyword: 'flip', index: 3 },
             { keyword: 'hello', index: 4 },
             { keyword: 'stop', index: 4 },
-            // Add more keywords and their corresponding animation indices here
         ];
 
         let activeAnimationIndex = 0;
-
-        // ...
-
         let actions = [];
-        let currentAnimation = null;
-        let animationMixers = [];
 
-        async function loadCharacterModel(modelPath, animationPaths) {
-            return new Promise((resolve, reject) => {
-                loader.load(modelPath, async (object) => {
-                    mixer = new THREE.AnimationMixer(object);
-                    character = object;
-                    character.position.set(0, 0, 0);
-                    scene.remove(stickman);
-                    scene.add(character);
-
-                    // Load animations
-                    actions = [];
-                    for (const animationPath of animationPaths) {
-                        await new Promise((resolveAnim, rejectAnim) => {
-                            loader.load('models/' + animationPath, (anim) => {
-                                const action = mixer.clipAction(anim.animations[0]);
-                                action.setLoop(THREE.LoopRepeat);
-                                actions.push(action);
-                                resolveAnim();
-                            }, undefined, rejectAnim);
-                        });
-                    }
-
-                    playAnimation(activeAnimationIndex);
-
-                    resolve();
-                }, undefined, reject);
+        function disposeObject3D(root) {
+            root.traverse((obj) => {
+                if (obj.geometry && typeof obj.geometry.dispose === 'function') {
+                    obj.geometry.dispose();
+                }
+                if (obj.material) {
+                    const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                    mats.forEach((m) => {
+                        if (m && typeof m.dispose === 'function') {
+                            m.dispose();
+                        }
+                    });
+                }
+                if (obj.skeleton && typeof obj.skeleton.dispose === 'function') {
+                    obj.skeleton.dispose();
+                }
             });
         }
 
+        function disposeCurrentCharacter() {
+            if (mixer) {
+                mixer.stopAllAction();
+                mixer.uncacheRoot(character);
+            }
+            actions = [];
+            if (character) {
+                scene.remove(character);
+                disposeObject3D(character);
+                character = null;
+            }
+            mixer = null;
+        }
 
-        let previousAnimation = null;
-        let isTransitioning = false;
+        const characterStatusEl = document.getElementById('characterStatus');
+        function setCharacterStatus(msg) {
+            if (characterStatusEl) {
+                characterStatusEl.textContent = msg;
+            }
+        }
+
+        async function loadCharacter(id) {
+            const def = characterById[id];
+            if (!def) return;
+            if (exportController) {
+                setCharacterStatus('Stop the export before switching characters.');
+                return;
+            }
+            const myGen = ++characterLoadGen;
+            disposeCurrentCharacter();
+            selectedCharacterId = id;
+            renderCharacterButtons();
+            renderAnimationButtons();
+            setCharacterStatus(`Loading ${def.label}…`);
+            try {
+                const object = await new Promise((res, rej) => loader.load(def.path, res, undefined, rej));
+                if (myGen !== characterLoadGen) {
+                    disposeObject3D(object);
+                    return;
+                }
+                mixer = new THREE.AnimationMixer(object);
+                character = object;
+                character.position.set(0, 0, 0);
+                scene.add(character);
+
+                for (const anim of animationList) {
+                    if (myGen !== characterLoadGen) return;
+                    const clip = await new Promise((res, rej) => loader.load('models/' + anim.file, res, undefined, rej));
+                    if (myGen !== characterLoadGen) return;
+                    const action = mixer.clipAction(clip.animations[0]);
+                    action.setLoop(THREE.LoopRepeat);
+                    actions.push(action);
+                }
+
+                if (myGen !== characterLoadGen) return;
+                playAnimation(activeAnimationIndex);
+                setCharacterStatus(`${def.label} loaded.`);
+                renderAnimationButtons();
+                updateStudioExportGate();
+            } catch (err) {
+                console.error(err);
+                if (myGen === characterLoadGen) {
+                    setCharacterStatus(`Failed to load ${def.label}.`);
+                }
+            }
+        }
 
         function playAnimation(index) {
             activeAnimationIndex = index;
@@ -1018,45 +1026,47 @@
                     action.stop();
                 }
             });
+            renderAnimationButtons();
         }
 
-
-        function updateCircle(index, isActive) {
-            const circle = document.getElementById('circle-' + index);
-            if (isActive) {
-                circle.style.borderColor = 'green';
-            } else {
-                circle.style.borderColor = 'transparent';
-            }
+        function renderCharacterButtons() {
+            document.querySelectorAll('.char-btn').forEach((btn) => {
+                btn.classList.toggle('is-active', btn.dataset.char === selectedCharacterId);
+            });
         }
 
-        // Create circles for each animation
-        const circleContainer = document.createElement('div');
-        circleContainer.style.position = 'fixed';
-        circleContainer.style.top = '10px';
-        circleContainer.style.left = '10px';
-        document.body.appendChild(circleContainer);
+        function renderAnimationButtons() {
+            const list = document.getElementById('animationList');
+            if (!list) return;
+            list.replaceChildren();
+            animationList.forEach((anim, i) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'anim-btn';
+                b.textContent = anim.label;
+                b.disabled = !actions[i];
+                if (i === activeAnimationIndex && actions[i]) {
+                    b.classList.add('is-active');
+                }
+                b.addEventListener('click', () => {
+                    if (actions[i]) playAnimation(i);
+                });
+                list.appendChild(b);
+            });
+        }
 
-        animations.forEach((animation, index) => {
-            const circle = document.createElement('div');
-            circle.id = 'circle-' + index;
-            circle.style.width = '10px';
-            circle.style.height = '10px';
-            circle.style.border = '2px solid transparent';
-            circle.style.borderRadius = '50%';
-            circle.style.backgroundColor = 'red';
-            circle.style.marginRight = '5px';
-            circleContainer.appendChild(circle);
-
-            circle.addEventListener('click', () => {
-                playAnimation(index);
+        document.querySelectorAll('.char-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                loadCharacter(btn.dataset.char);
             });
         });
+
+        renderCharacterButtons();
+        renderAnimationButtons();
 
         const animate = function () {
             requestAnimationFrame(animate);
             const delta = getMixerDelta();
-            animateStickman();
             if (videoTexture && !embedVideo.paused && !embedVideo.ended) {
                 videoTexture.needsUpdate = true;
             }
@@ -1093,6 +1103,8 @@
                 const word = canvasWords[wi];
                 if (Date.now() - word.time >= 6000) {
                     scene.remove(word.mesh);
+                    if (word.mesh.geometry) word.mesh.geometry.dispose();
+                    if (word.mesh.material) word.mesh.material.dispose();
                     canvasWords.splice(wi, 1);
                 } else {
                     wi++;
@@ -1149,6 +1161,11 @@
             return `${m}:${String(s).padStart(2, '0')}`;
         }
 
+        function sanitizeExportName(name) {
+            const cleaned = String(name || '').trim().replace(/[\/\\:*?"<>|]+/g, '_').replace(/\s+/g, '-');
+            return cleaned.length ? cleaned.slice(0, 64) : 'gvp-export';
+        }
+
         function cueTime(c) {
             if (typeof c.tStart === 'number') {
                 return c.tStart;
@@ -1194,12 +1211,22 @@
             }
             const mimeOk = pickVideoMimeType() !== '';
             const recording = exportController != null;
-            stStart.disabled = recording || !audioGraph || !mimeOk;
+            const hasCharacter = !!character;
+            stStart.disabled = recording || !audioGraph || !mimeOk || !hasCharacter;
+            stStart.title = !mimeOk
+                ? 'WebM recording not available in this browser'
+                : !audioGraph
+                    ? 'Init audio first'
+                    : !hasCharacter
+                        ? 'Pick a character first'
+                        : '';
         }
 
         function refreshStudioIdleStatus() {
             if (!pickVideoMimeType()) {
                 setStudioStatus('Recording unavailable (no WebM in this browser)');
+            } else if (!character) {
+                setStudioStatus(audioGraph ? 'Pick a character to enable export' : 'Ready');
             } else if (audioGraph) {
                 setStudioStatus('Audio ready');
             } else {
@@ -1346,6 +1373,11 @@
                 alert('Use “Init audio” first (mic + mix).');
                 return;
             }
+            if (!character) {
+                setStudioStatus('Pick a character first');
+                alert('Pick a character in the panel before recording.');
+                return;
+            }
             activeTtsSources.forEach((s) => {
                 try {
                     s.stop(0);
@@ -1446,8 +1478,15 @@
             try {
                 setStudioStatus('Finalizing…');
                 const blob = await exportController.stop();
+                const prevUrl = studioExportDownload.href;
+                if (prevUrl && prevUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(prevUrl);
+                }
                 const url = URL.createObjectURL(blob);
                 studioExportDownload.href = url;
+                const nameInput = document.getElementById('studioExportName');
+                const safeName = sanitizeExportName(nameInput ? nameInput.value : 'gvp-export');
+                studioExportDownload.download = `${safeName}.webm`;
                 studioExportDownload.classList.add('is-ready');
                 finalizeOk = true;
             } catch (err) {
@@ -1536,62 +1575,15 @@
             }
         });
 
-        function populateTtsVoices() {
-            const sel = document.getElementById('ttsVoice');
-            const voices = speechSynthesis.getVoices();
-            sel.innerHTML = '';
-            voices.forEach((v, i) => {
-                const o = document.createElement('option');
-                o.value = String(i);
-                o.textContent = `${v.name} (${v.lang})`;
-                sel.appendChild(o);
-            });
-        }
-
-        speechSynthesis.onvoiceschanged = populateTtsVoices;
-        populateTtsVoices();
-
-        document.getElementById('btnTtsPreview').addEventListener('click', async () => {
-            const text = document.getElementById('ttsText').value;
-            const trimmed = text.trim();
-            if (!trimmed) return;
-            let voices = speechSynthesis.getVoices();
-            if (voices.length === 0) {
-                await new Promise((r) => setTimeout(r, 250));
-                voices = speechSynthesis.getVoices();
-            }
-            if (voices.length === 0) {
-                return;
-            }
-            const sel = document.getElementById('ttsVoice');
-            if (sel.options.length === 0) {
-                populateTtsVoices();
-            }
-            const u = new SpeechSynthesisUtterance(text);
-            const vi = parseInt(sel.value, 10);
-            if (voices[vi]) {
-                u.voice = voices[vi];
-            }
-            u.rate = parseFloat(document.getElementById('ttsRate').value);
-            u.pitch = parseFloat(document.getElementById('ttsPitch').value);
-            speechSynthesis.cancel();
-            speechSynthesis.speak(u);
-        });
-
-        document.getElementById('btnTtsWasmPreview').addEventListener('click', async () => {
-            const trimmed = document.getElementById('ttsText').value.trim();
-            if (!trimmed) {
-                return;
-            }
+        async function previewTtsThroughGraph(text) {
             if (!audioGraph) {
                 setStudioStatus('Init audio first');
-                alert('Use “Init audio” first to hear WASM TTS in the mix.');
                 return;
             }
             try {
-                setStudioStatus('WASM TTS…');
+                setStudioStatus('Synthesizing…');
                 await audioGraph.context.resume();
-                const buf = await synthesizeToAudioBuffer(audioGraph.context, trimmed, (p) => {
+                const buf = await synthesizeToAudioBuffer(audioGraph.context, text, (p) => {
                     if (p && p.status === 'progress' && p.progress != null) {
                         setStudioStatus(`Model file ${Math.round(100 * p.progress)}%`);
                     }
@@ -1601,40 +1593,127 @@
             } catch (err) {
                 console.error(err);
                 setStudioStatus('TTS error');
-                alert(err.message || String(err));
             }
+        }
+
+        document.getElementById('btnTtsWasmPreview').addEventListener('click', () => {
+            const trimmed = document.getElementById('ttsText').value.trim();
+            if (!trimmed) return;
+            if (!audioGraph) {
+                setStudioStatus('Init audio first');
+                alert('Use “Init audio” first to hear TTS in the mix.');
+                return;
+            }
+            previewTtsThroughGraph(trimmed);
         });
+
+        function newCueId() {
+            return typeof crypto !== 'undefined' && crypto.randomUUID
+                ? crypto.randomUUID()
+                : `c-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        }
+
+        function addCueFromText(text, tStart) {
+            const trimmed = String(text || '').trim();
+            if (!trimmed) return false;
+            commentaryCues.push({
+                id: newCueId(),
+                tStart: typeof tStart === 'number' ? tStart : getTimelineNow(),
+                text: trimmed,
+                kind: 'tts',
+            });
+            commentaryCues.sort((a, b) => cueTime(a) - cueTime(b));
+            renderCueList();
+            return true;
+        }
 
         function renderCueList() {
             const el = document.getElementById('cueList');
+            if (!el) return;
             el.replaceChildren();
+            if (!commentaryCues.length) {
+                const empty = document.createElement('div');
+                empty.textContent = 'No cues yet.';
+                empty.style.opacity = '0.6';
+                empty.style.padding = '4px 0';
+                el.appendChild(empty);
+                return;
+            }
             commentaryCues.forEach((c, i) => {
                 const row = document.createElement('div');
-                const kind = c.kind || 'tts';
-                const line = String(c.text || c.note || '').trim() || '(empty)';
-                row.textContent = `${i + 1}. t=${cueTime(c).toFixed(2)}s [${kind}] — ${line}`;
+                row.className = 'cue-row';
+
+                const timeIn = document.createElement('input');
+                timeIn.type = 'number';
+                timeIn.step = '0.1';
+                timeIn.min = '0';
+                timeIn.value = cueTime(c).toFixed(2);
+                timeIn.title = 'Cue time (seconds)';
+                timeIn.addEventListener('change', () => {
+                    const v = parseFloat(timeIn.value);
+                    if (Number.isFinite(v) && v >= 0) {
+                        c.tStart = v;
+                        commentaryCues.sort((a, b) => cueTime(a) - cueTime(b));
+                        renderCueList();
+                    } else {
+                        timeIn.value = cueTime(c).toFixed(2);
+                    }
+                });
+
+                const textIn = document.createElement('input');
+                textIn.type = 'text';
+                textIn.value = c.text || '';
+                textIn.title = 'Cue text';
+                textIn.addEventListener('change', () => {
+                    c.text = textIn.value;
+                });
+
+                const previewBtn = document.createElement('button');
+                previewBtn.type = 'button';
+                previewBtn.textContent = '▶';
+                previewBtn.title = 'Preview this cue through the mix';
+                previewBtn.addEventListener('click', () => {
+                    const t = (c.text || '').trim();
+                    if (!t) return;
+                    if (!audioGraph) {
+                        setStudioStatus('Init audio first');
+                        return;
+                    }
+                    previewTtsThroughGraph(t);
+                });
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.textContent = '✕';
+                delBtn.title = 'Delete this cue';
+                delBtn.addEventListener('click', () => {
+                    commentaryCues.splice(i, 1);
+                    renderCueList();
+                });
+
+                row.appendChild(timeIn);
+                row.appendChild(textIn);
+                row.appendChild(previewBtn);
+                row.appendChild(delBtn);
                 el.appendChild(row);
             });
         }
 
         document.getElementById('btnAddCue').addEventListener('click', () => {
-            const raw = document.getElementById('ttsText').value.trim();
-            commentaryCues.push({
-                id:
-                    typeof crypto !== 'undefined' && crypto.randomUUID
-                        ? crypto.randomUUID()
-                        : String(Date.now()),
-                tStart: getTimelineNow(),
-                text: raw || 'cue',
-                kind: 'tts',
-            });
-            renderCueList();
+            const raw = document.getElementById('ttsText').value;
+            if (!addCueFromText(raw)) {
+                setStudioStatus('Type a line first');
+            }
         });
 
         document.getElementById('btnClearCues').addEventListener('click', () => {
+            if (!commentaryCues.length) return;
+            if (!confirm('Clear all cues?')) return;
             commentaryCues.length = 0;
             renderCueList();
         });
+
+        renderCueList();
 
         const PROJECT_ID = 'gvp-default';
 
@@ -1687,6 +1766,11 @@
         }
 
         async function applyProject(data) {
+            if (exportController) {
+                setStudioStatus('Stop the export before loading a project');
+                alert('Stop the current export before loading another project.');
+                return false;
+            }
             if (!data || (data.version !== 1 && data.version !== 2)) {
                 setStudioStatus('Project file unsupported');
                 alert('Unsupported project file.');
@@ -1722,9 +1806,7 @@
             }
             timelineTime = 0;
             if (data.selectedCharacterId && characterById[data.selectedCharacterId]) {
-                modelSelection.style.display = 'none';
-                scene.add(stickman);
-                await loadCharacterModel(characterById[data.selectedCharacterId], animations);
+                await loadCharacter(data.selectedCharacterId);
             }
             return true;
         }
@@ -1800,6 +1882,32 @@
             projectFileInput.value = '';
         });
 
+        document.getElementById('btnResetProject').addEventListener('click', () => {
+            if (exportController) {
+                alert('Stop the export before resetting.');
+                return;
+            }
+            if (!confirm('Reset the scene? This clears the character, video, and cues. Saved projects are not affected.')) {
+                return;
+            }
+            disposeCurrentCharacter();
+            selectedCharacterId = null;
+            renderCharacterButtons();
+            renderAnimationButtons();
+            setCharacterStatus('No character loaded.');
+            clearEmbeddedVideo();
+            timelineTime = 0;
+            commentaryCues.length = 0;
+            renderCueList();
+            studioExportDownload.classList.remove('is-ready');
+            if (studioExportDownload.href && studioExportDownload.href.startsWith('blob:')) {
+                URL.revokeObjectURL(studioExportDownload.href);
+                studioExportDownload.href = '#';
+            }
+            syncStudioTimelineUi(true);
+            refreshStudioIdleStatus();
+        });
+
         const SpeechRecognitionCtor =
             window.SpeechRecognition ||
             window.webkitSpeechRecognition ||
@@ -1810,7 +1918,10 @@
         const languageSelector = document.getElementById('language');
         if (recognition) {
             recognition.lang = languageSelector.value;
-            recognition.interimResults = true;
+            recognition.interimResults = false;
+            if ('continuous' in recognition) {
+                recognition.continuous = true;
+            }
             languageSelector.addEventListener('change', () => {
                 recognition.lang = languageSelector.value;
             });
@@ -1819,164 +1930,69 @@
             languageSelector.title = 'Speech recognition not supported in this browser';
         }
 
-        const startButton = document.getElementById("startButton");
-        const recordButton = document.getElementById("recordButton");
-        const stopRecordingButton = document.getElementById("stopRecordingButton");
-        const tracksContainer = document.getElementById("tracksContainer");
+        let voiceOn = false;
+        let voiceRestartPending = false;
+        const voiceToggleBtn = document.getElementById('btnVoiceToggle');
 
-        if (recognition) {
-            startButton.addEventListener("click", function () {
-                startButton.style.display = "none";
-                recognition.start();
-                recordButton.style.display = "inline";
-            });
-        } else {
-            startButton.textContent = 'Speech N/A';
-            startButton.disabled = true;
-            startButton.title = 'Speech recognition not supported in this browser';
+        function setVoiceToggleUi() {
+            if (!voiceToggleBtn) return;
+            voiceToggleBtn.classList.toggle('is-on', voiceOn);
+            voiceToggleBtn.textContent = voiceOn ? 'Voice cues: on' : 'Voice cues: off';
         }
 
-        let mediaRecorder;
-        let audioChunks = [];
+        function applyRecognitionHandlers() {
+            if (!recognition) return;
+            recognition.onstart = () => {
+                voiceRestartPending = false;
+            };
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript = event.results[i][0].transcript;
+                        break;
+                    }
+                }
+                if (!transcript) {
+                    transcript = event.results[event.results.length - 1][0].transcript;
+                }
+                const words = transcript.trim().split(/\s+/).filter(Boolean);
+                handleVoiceWords(words);
+            };
+            recognition.onerror = (e) => {
+                if (e && (e.error === 'not-allowed' || e.error === 'service-not-allowed')) {
+                    voiceOn = false;
+                    setVoiceToggleUi();
+                    setStudioStatus('Mic permission denied for voice cues');
+                }
+            };
+            recognition.onend = () => {
+                if (voiceOn) {
+                    voiceRestartPending = true;
+                    try { recognition.start(); } catch (_) { /* may throw if already running */ }
+                }
+            };
+        }
 
-        recordButton.addEventListener("click", function () {
-            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-                mediaRecorder = new MediaRecorder(stream);
-                mediaRecorder.start();
-
-                audioChunks = [];
-                mediaRecorder.addEventListener("dataavailable", event => {
-                    audioChunks.push(event.data);
-                });
-
-                recordButton.style.display = "none";
-                stopRecordingButton.style.display = "inline";
-            });
-        });
-
-        let trackid = 0;
-
-        function createTrack(audioUrl, words) {
-            const audio = new Audio(audioUrl);
-            audio.loop = true;
-            trackid++;
-
-            const trackDiv = document.createElement("div");
-            trackDiv.classList.add("records");
-            const loopStopButton = document.createElement("button");
-            loopStopButton.textContent = `Stop/Track ${trackid}`;
-            loopStopButton.addEventListener("click", () => {
-                if (audio.paused) {
-                    audio.play();
-                    loopStopButton.textContent = `Stop/Track ${trackid}`;
-                } else {
-                    audio.pause();
-                    loopStopButton.textContent = `Start/Track ${trackid}`;
+        function handleVoiceWords(words) {
+            if (!words.length) return;
+            words.forEach((w) => {
+                const match = animationKeywords.find((a) => a.keyword === w.toLowerCase());
+                if (match && actions[match.index]) {
+                    playAnimation(match.index);
                 }
             });
-
-            trackDiv.appendChild(loopStopButton);
-            tracksContainer.appendChild(trackDiv);
-            audio.addEventListener("play", () => {
-                drawWords(words);
-            });
-            audio.addEventListener("pause", () => {
-                clearWords();
-            });
-            audio.play();
+            drawWordsInScene(words);
+            const phrase = words.join(' ').trim();
+            if (phrase) {
+                addCueFromText(phrase, getTimelineNow());
+            }
         }
 
-        stopRecordingButton.addEventListener("click", function () {
-            mediaRecorder.stop();
-            mediaRecorder.addEventListener("stop", () => {
-                const audioBlob = new Blob(audioChunks);
-                const audioUrl = URL.createObjectURL(audioBlob);
-                createTrack(audioUrl, recognizedWords);
-                recognizedWords = []; // Reset the recognized words array
-                recordButton.style.display = "inline";
-                stopRecordingButton.style.display = "none";
-            });
-        });
-
-
-        let startTime;
-
-        if (recognition) {
-            recognition.onstart = function () {
-                startTime = Date.now();
-            };
-
-            recognition.onresult = function (event) {
-                const transcript = event.results[0][0].transcript;
-                const words = transcript.split(" ");
-                const currentTime = Date.now();
+        function drawWordsInScene(words) {
+            loadFont().then((font) => {
                 words.forEach((word) => {
-                    recognizedWords.push({
-                        word: word,
-                        time: currentTime - startTime,
-                    });
-                });
-                drawScene(words);
-            };
-
-            recognition.onend = function () {
-                recognition.start();
-            };
-        }
-
-        function clearWords() {
-            canvasWords.forEach((word) => {
-                scene.remove(word.mesh);
-            });
-            canvasWords = [];
-        }
-
-
-        function drawWords(words) {
-            if (!words || !words.length) return;
-            loadFont().then((font) => {
-                let prevT = 0;
-                words.forEach((entry) => {
-                    const word = typeof entry === 'string' ? entry : entry.word;
-                    const t = typeof entry === 'string' ? prevT : (entry.time || 0);
-                    const delay = Math.max(0, t - prevT);
-                    prevT = t;
-                    setTimeout(() => {
-                        const textGeometry = new TextGeometry(word, {
-                            font: font,
-                            size: 10,
-                            height: 1,
-                        });
-                        const textMaterial = new THREE.MeshBasicMaterial({ color: randomColor() });
-                        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-                        textMesh.position.set(
-                            Math.random() * 400 - 200,
-                            Math.random() * 200,
-                            Math.random() * 500 - 200
-                        );
-                        scene.add(textMesh);
-                        canvasWords.push({
-                            mesh: textMesh,
-                            time: Date.now(),
-                        });
-                    }, delay);
-                });
-            });
-        }
-
-        function drawScene(words) {
-            loadFont().then((font) => {
-                words.forEach(word => {
-                    const matchedAnimation = animationKeywords.find(anim => anim.keyword === word.toLowerCase());
-                    if (matchedAnimation) {
-                        playAnimation(matchedAnimation.index);
-                    }
-
-                    const textGeometry = new TextGeometry(word, {
-                        font: font,
-                        size: 10,
-                        height: 1
-                    });
+                    const textGeometry = new TextGeometry(word, { font, size: 10, height: 1 });
                     const textMaterial = new THREE.MeshBasicMaterial({ color: randomColor() });
                     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
                     textMesh.position.set(
@@ -1985,18 +2001,40 @@
                         Math.random() * 500 - 200
                     );
                     scene.add(textMesh);
-                    canvasWords.push({
-                        mesh: textMesh,
-                        time: Date.now()
-                    });
+                    canvasWords.push({ mesh: textMesh, time: Date.now() });
                 });
             });
         }
 
-
         function randomColor() {
             return '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
         }
+
+        if (recognition) {
+            applyRecognitionHandlers();
+            voiceToggleBtn.addEventListener('click', () => {
+                if (voiceOn) {
+                    voiceOn = false;
+                    try { recognition.stop(); } catch (_) {}
+                    setStudioStatus('Voice cues off');
+                } else {
+                    voiceOn = true;
+                    try {
+                        recognition.start();
+                        setStudioStatus('Voice cues on');
+                    } catch (e) {
+                        voiceOn = false;
+                        setStudioStatus('Voice start failed');
+                    }
+                }
+                setVoiceToggleUi();
+            });
+        } else {
+            voiceToggleBtn.disabled = true;
+            voiceToggleBtn.textContent = 'Voice cues: N/A';
+            voiceToggleBtn.title = 'SpeechRecognition not supported in this browser';
+        }
+        setVoiceToggleUi();
 
         const questionMarkButton = document.getElementById('questionMarkButton');
         const infoBox = document.getElementById('infoBox');
@@ -2007,14 +2045,33 @@
             infoBox.style.display = 'block';
         });
 
-        closeButton.addEventListener('click', () => {
-            infoBox.style.display = 'none';
-        });
-        okbutton.addEventListener('click', () => {
-            infoBox.style.display = 'none';
+        function hideInfoBox() { infoBox.style.display = 'none'; }
+        closeButton.addEventListener('click', hideInfoBox);
+        okbutton.addEventListener('click', hideInfoBox);
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Escape' && infoBox.style.display === 'block') {
+                hideInfoBox();
+            }
         });
 
-
+        function cleanupBeforeUnload() {
+            try { if (recognition) recognition.stop(); } catch (_) {}
+            voiceOn = false;
+            try { if (exportController) exportController.stop(); } catch (_) {}
+            exportController = null;
+            if (micStream) {
+                micStream.getTracks().forEach((t) => { try { t.stop(); } catch (_) {} });
+                micStream = null;
+            }
+            if (audioGraph) {
+                try { audioGraph.dispose(); } catch (_) {}
+                audioGraph = null;
+            }
+            if (studioExportDownload && studioExportDownload.href && studioExportDownload.href.startsWith('blob:')) {
+                try { URL.revokeObjectURL(studioExportDownload.href); } catch (_) {}
+            }
+        }
+        window.addEventListener('pagehide', cleanupBeforeUnload);
 
         animate();
     </script>

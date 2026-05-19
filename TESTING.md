@@ -1,18 +1,55 @@
-# Manual smoke: WebM export and WASM TTS
+# Manual smoke test
 
-Serve the app over HTTP (file URLs block some APIs):
+Serve over HTTP — `file://` blocks `MediaRecorder`, `getUserMedia`, and
+WebAudio:
 
 ```bash
-cd /path/to/tv && python3 -m http.server 8080
+python3 -m http.server 8080
+# open http://localhost:8080/
 ```
 
-Open `http://localhost:8080/` (or your port).
+## Golden path
 
-1. **Codec check** — Studio status should not say “Recording unavailable”. If it does, try another browser (WebM + MediaRecorder required).
-2. **Init audio** — Click **Init audio**, allow the microphone. Status should become **Audio ready**; **Start export** should enable.
-3. **Timeline** — Load a short video with **Load video** (optional). Scrub the range; timecode should follow. **Play** / **Pause** should stay in sync.
-4. **WASM TTS** — In the left panel, type a line and use **Preview WASM** (first run downloads the model). You should hear speech through the mix.
-5. **Cues + export** — **Add cue** at least once. Click **Start export**, wait for recording, **Stop export**, then **Download WebM** in the studio bar. Open the file: you should see the 3D canvas and hear embedded video / mic / TTS as mixed.
-6. **Tab focus** — Keep the tab visible while exporting; background tabs may throttle rendering.
+1. **Codec check** — Studio status should not read "Recording unavailable". If
+   it does, try another browser (WebM + `MediaRecorder` required).
+2. **Pick a character** — Side panel → click **Glasses / Aj / Remy / pmm**.
+   Status updates ("Loading…" → "Aj loaded."). Animation buttons enable.
+3. **Animations** — Click Run / Jump / Dance / Cartwheel / Capoeira. The
+   character should switch clip and the active button should highlight.
+4. **Load video** (optional) — Studio bar → **Load video**, pick a small file.
+   Scrubber should reflect the video's duration; play/pause via the studio
+   button (or Space).
+5. **Init audio** — Click **Init audio**, allow the microphone. Status becomes
+   "Audio ready". **Start export** enables.
+6. **TTS cue** — Type a line into the TTS box. Click **Preview** (first run
+   downloads the model — wait for "Ready"). Click **Add cue**. The cue row
+   shows editable time/text plus ▶ and ✕.
+7. **Voice cues** (optional, Chromium/Edge/Safari only) — Click
+   **Voice cues: off** to switch it on. Speak "run" → character should switch
+   to the Run clip. Each phrase appears as a new TTS cue.
+8. **Export** — Set a filename. Click **Start export**, wait a few seconds,
+   click **Stop export**. **Download WebM** appears with the chosen filename.
+   Open the file — you should see the 3D canvas and hear mic / video / TTS as
+   mixed.
 
-Automated checks: run `npm test` (tests `pickVideoMimeType` in Node with a mocked `MediaRecorder`).
+## State / leak checks
+
+- Switch character mid-session — previous FBX should disappear without console
+  errors; status should report the new character.
+- **Reset** — confirms, then clears character / video / cues. Subsequent
+  Save/Load should round-trip cleanly.
+- Save → reload page → Load. Cues, character, embedded video, mix gains
+  should restore.
+- Try **Start export** with no character loaded — should be blocked with a
+  clear message ("Pick a character to enable export").
+- Try to load a project mid-export — should be refused with "Stop the export
+  before loading a project".
+
+## Automated
+
+```bash
+npm test
+```
+
+Currently covers `pickVideoMimeType` codec fallback (Node + mocked
+`MediaRecorder`).
