@@ -535,7 +535,6 @@
     </div>
 
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
     <script type="importmap">
@@ -551,7 +550,6 @@
 
     <script type="module">
         import * as THREE from 'three';
-        // import * as TWEEN from 'tween';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
         import { FontLoader } from 'three/addons/loaders/FontLoader.js';
@@ -1671,15 +1669,6 @@
             };
         }
 
-        function clearRainMeshes() {
-            for (let i = rain.length - 1; i >= 0; i--) {
-                scene.remove(rain[i]);
-                rain[i].geometry.dispose();
-                rain[i].material.dispose();
-                rain.pop();
-            }
-        }
-
         function migrateCue(c) {
             if (c.tStart != null || c.text != null) {
                 return {
@@ -1712,7 +1701,7 @@
             settings.rainAreaWidth = data.rainAreaWidth ?? settings.rainAreaWidth;
             settings.rainAreaDepth = data.rainAreaDepth ?? settings.rainAreaDepth;
             settings.rainCount = data.rainCount ?? settings.rainCount;
-            clearRainMeshes();
+            disposeRainInstanced();
             initRain();
             gvpControls.videoGain = data.gainVideo ?? 0.7;
             gvpControls.micGain = data.gainMic ?? 1;
@@ -1811,27 +1800,41 @@
             projectFileInput.value = '';
         });
 
-        // Add the speech recognition initialization code
-        const recognition = new (window.SpeechRecognition ||
+        const SpeechRecognitionCtor =
+            window.SpeechRecognition ||
             window.webkitSpeechRecognition ||
             window.mozSpeechRecognition ||
-            window.msSpeechRecognition)();
+            window.msSpeechRecognition ||
+            null;
+        const recognition = SpeechRecognitionCtor ? new SpeechRecognitionCtor() : null;
         const languageSelector = document.getElementById('language');
-        recognition.lang = languageSelector.value;
-        recognition.interimResults = true;
-        languageSelector.addEventListener('change', () => {
+        if (recognition) {
             recognition.lang = languageSelector.value;
-        });
+            recognition.interimResults = true;
+            languageSelector.addEventListener('change', () => {
+                recognition.lang = languageSelector.value;
+            });
+        } else {
+            languageSelector.disabled = true;
+            languageSelector.title = 'Speech recognition not supported in this browser';
+        }
 
         const startButton = document.getElementById("startButton");
-        startButton.addEventListener("click", function () {
-            startButton.style.display = "none";
-            recognition.start();
-            recordButton.style.display = "inline";
-        });
         const recordButton = document.getElementById("recordButton");
         const stopRecordingButton = document.getElementById("stopRecordingButton");
         const tracksContainer = document.getElementById("tracksContainer");
+
+        if (recognition) {
+            startButton.addEventListener("click", function () {
+                startButton.style.display = "none";
+                recognition.start();
+                recordButton.style.display = "inline";
+            });
+        } else {
+            startButton.textContent = 'Speech N/A';
+            startButton.disabled = true;
+            startButton.title = 'Speech recognition not supported in this browser';
+        }
 
         let mediaRecorder;
         let audioChunks = [];
@@ -1898,27 +1901,28 @@
 
         let startTime;
 
-        recognition.onstart = function () {
-            startTime = Date.now();
-        };
+        if (recognition) {
+            recognition.onstart = function () {
+                startTime = Date.now();
+            };
 
-        recognition.onresult = function (event) {
-            const transcript = event.results[0][0].transcript;
-            const words = transcript.split(" ");
-            const currentTime = Date.now();
-            words.forEach((word) => {
-                recognizedWords.push({
-                    word: word,
-                    time: currentTime - startTime,
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                const words = transcript.split(" ");
+                const currentTime = Date.now();
+                words.forEach((word) => {
+                    recognizedWords.push({
+                        word: word,
+                        time: currentTime - startTime,
+                    });
                 });
-            });
-            drawScene(words);
-        };
+                drawScene(words);
+            };
 
-
-        recognition.onend = function () {
-            recognition.start();
-        };
+            recognition.onend = function () {
+                recognition.start();
+            };
+        }
 
         function clearWords() {
             canvasWords.forEach((word) => {
@@ -1929,11 +1933,15 @@
 
 
         function drawWords(words) {
-            let wordIndex = 0;
-            const drawNextWord = () => {
-                if (wordIndex < words.length) {
-                    loadFont().then((font) => {
-                        const word = words[wordIndex].word;
+            if (!words || !words.length) return;
+            loadFont().then((font) => {
+                let prevT = 0;
+                words.forEach((entry) => {
+                    const word = typeof entry === 'string' ? entry : entry.word;
+                    const t = typeof entry === 'string' ? prevT : (entry.time || 0);
+                    const delay = Math.max(0, t - prevT);
+                    prevT = t;
+                    setTimeout(() => {
                         const textGeometry = new TextGeometry(word, {
                             font: font,
                             size: 10,
@@ -1951,24 +1959,16 @@
                             mesh: textMesh,
                             time: Date.now(),
                         });
-                    });
-                    setTimeout(drawNextWord, words[wordIndex].time);
-                    wordIndex++;
-                }
-            };
-            drawNextWord();
+                    }, delay);
+                });
+            });
         }
 
         function drawScene(words) {
-            // Load the Helvetiker font
-            const fontLoader = new FontLoader();
-            fontLoader.load("https://threejs.org/examples/fonts/helvetiker_regular.typeface.json", function (font) {
-                // Create a TextGeometry with the font
+            loadFont().then((font) => {
                 words.forEach(word => {
-                    // Check if the recognized word matches any of the keywords
                     const matchedAnimation = animationKeywords.find(anim => anim.keyword === word.toLowerCase());
                     if (matchedAnimation) {
-                        // Trigger the corresponding animation
                         playAnimation(matchedAnimation.index);
                     }
 
@@ -1991,13 +1991,11 @@
                     });
                 });
             });
-
         }
 
 
-        // Add the randomColor function
         function randomColor() {
-            return '#' + ((Math.random() * 0xffffff) << 0).toString(16);
+            return '#' + ((Math.random() * 0xffffff) << 0).toString(16).padStart(6, '0');
         }
 
         const questionMarkButton = document.getElementById('questionMarkButton');
